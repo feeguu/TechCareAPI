@@ -5,8 +5,11 @@ import customParserFormat from "dayjs/plugin/customParseFormat"
 import express from "express"
 import { HttpError } from "../errors/HttpError"
 import missingParamsError from "../errors/missingParamsError"
+import unautheticatedError from "../errors/unautheticatedError"
 import isAdmin from "../middlewares/isAdmin"
 import isAuth from "../middlewares/isAuth"
+import getRole from "../utils/getRole"
+import { getUserId } from "../utils/token"
 
 const prisma = new PrismaClient()
 
@@ -75,6 +78,32 @@ caregiversRoute.get("/", isAuth, isAdmin, async (req, res, next) => {
 		})
 
 		return res.status(200).json(caregivers)
+	} catch (e) {
+		next(e)
+	}
+})
+
+caregiversRoute.get("/:caregiverId", isAuth, async (req, res, next) => {
+	try {
+		const { caregiverId } = req.params
+		const userReqId = getUserId(res.locals.token)
+		if (userReqId !== caregiverId && (await getRole(userReqId)) !== "ADMIN") {
+			throw unautheticatedError
+		}
+		const caregiver = await prisma.user.findUnique({
+			where: { id: caregiverId },
+			select: {
+				id: true,
+				name: true,
+				role: true,
+				username: true,
+				contact: true,
+			},
+		})
+		if (caregiver?.role === "ADMIN") {
+			return res.status(200).json({})
+		}
+		return res.status(200).json(caregiver)
 	} catch (e) {
 		next(e)
 	}
