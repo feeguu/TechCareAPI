@@ -61,4 +61,23 @@ caregiverRoutes.post("/", isAuth, isAdmin, async (req, res, next) => {
 	}
 })
 
+caregiverRoutes.get("/", isAuth, isAdmin, async (req, res, next) => {
+	try {
+		const caregivers = await prisma.user.findMany({
+			where: { role: { equals: "CAREGIVER" } },
+			select: {
+				id: true,
+				name: true,
+				role: true,
+				username: true,
+				contact: true,
+			},
+		})
+
+		return res.status(200).json(caregivers)
+	} catch (e) {
+		next(e)
+	}
+})
+
 export default caregiverRoutes
