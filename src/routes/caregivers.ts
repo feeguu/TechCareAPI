@@ -10,7 +10,7 @@ import isAuth from "../middlewares/isAuth"
 
 const prisma = new PrismaClient()
 
-const caregiverRoutes = express.Router()
+const caregiversRoute = express.Router()
 
 type CreateCaregiverRequestBody = {
 	name: string
@@ -18,7 +18,7 @@ type CreateCaregiverRequestBody = {
 	contact: string
 }
 
-caregiverRoutes.post("/", isAuth, isAdmin, async (req, res, next) => {
+caregiversRoute.post("/", isAuth, isAdmin, async (req, res, next) => {
 	try {
 		dayjs.extend(customParserFormat)
 		const { name, birthdate, contact } = req.body as CreateCaregiverRequestBody
@@ -61,7 +61,7 @@ caregiverRoutes.post("/", isAuth, isAdmin, async (req, res, next) => {
 	}
 })
 
-caregiverRoutes.get("/", isAuth, isAdmin, async (req, res, next) => {
+caregiversRoute.get("/", isAuth, isAdmin, async (req, res, next) => {
 	try {
 		const caregivers = await prisma.user.findMany({
 			where: { role: { equals: "CAREGIVER" } },
@@ -80,4 +80,4 @@ caregiverRoutes.get("/", isAuth, isAdmin, async (req, res, next) => {
 	}
 })
 
-export default caregiverRoutes
+export default caregiversRoute
