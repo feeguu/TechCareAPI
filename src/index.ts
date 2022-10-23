@@ -1,7 +1,7 @@
 import express, { Request, Response } from "express"
 import caregiverRoutes from "./routes/caregiver"
 import userRoutes from "./routes/user"
-import { HttpError } from "./utils/httpError"
+import { HttpError } from "./errors/HttpError"
 
 const app = express()
 
