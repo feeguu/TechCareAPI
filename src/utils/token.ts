@@ -22,5 +22,4 @@ export function getUserId(token: string) {
     if (payload.sub) {
         return payload.sub.toString()
     }
-    return false
 }
