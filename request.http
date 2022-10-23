@@ -1,0 +1,57 @@
+### Admin: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2NjY1NTAxMDAsImV4cCI6MTY2Nzg0NjEwMCwiaXNzIjoiVGVjaENhcmUiLCJzdWIiOiJjbDlldzgwNmwwMDAwYmFiaW42bmF3Njd1In0.WlAcygJsrIwrcUQbjPuyQt2rvUIAVd2tdPKugn1WTdQ
+### Caregiver: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2NjY1NTAxMjQsImV4cCI6MTY2Nzg0NjEyNCwiaXNzIjoiVGVjaENhcmUiLCJzdWIiOiJjbDlld2F4Z2gwMDA0YmFiaXhoYmU5bGpyIn0.Jnse8IIzV5cr6aGJaa6UaO3sneJFeY-D3MASfr7N1PY
+
+###Login
+POST http://localhost:3000/user/auth
+Content-Type: application/json
+
+{
+    "username": "gustavo.siqueira2",
+    "password": "gustavo2005"
+}
+
+
+### Get auth
+GET http://localhost:3000/user/auth
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2NjY1NjYzNzEsImV4cCI6MTY2Nzg2MjM3MSwiaXNzIjoiVGVjaENhcmUiLCJzdWIiOiJjbDlseWloZ2cwMDAwYmE0ZDhobHAwdWN0In0.P30LMvLHobJWip8gKj8TDYBQp9nMARyg1HcpZ59lKiE
+
+
+###Change password
+POST http://localhost:3000/user/change-password
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2NjY1NTAxMDAsImV4cCI6MTY2Nzg0NjEwMCwiaXNzIjoiVGVjaENhcmUiLCJzdWIiOiJjbDlldzgwNmwwMDAwYmFiaW42bmF3Njd1In0.WlAcygJsrIwrcUQbjPuyQt2rvUIAVd2tdPKugn1WTdQ
+
+
+{   
+    "oldPassword": "admin123",
+    "newPassword": "gustavo123"
+}
+
+
+### Create caregiver
+POST http://localhost:3000/caregivers/
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2NjY1NTAxMDAsImV4cCI6MTY2Nzg0NjEwMCwiaXNzIjoiVGVjaENhcmUiLCJzdWIiOiJjbDlldzgwNmwwMDAwYmFiaW42bmF3Njd1In0.WlAcygJsrIwrcUQbjPuyQt2rvUIAVd2tdPKugn1WTdQ
+
+
+{
+    "name": "Gustavo Santos Siqueira",
+    "contact": "(11) 11111-11111",
+    "birthdate": "2005-01-01"
+}
+
+
+### Get all caregivers
+GET http://localhost:3000/caregivers/
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2NjY1NTAxMDAsImV4cCI6MTY2Nzg0NjEwMCwiaXNzIjoiVGVjaENhcmUiLCJzdWIiOiJjbDlldzgwNmwwMDAwYmFiaW42bmF3Njd1In0.WlAcygJsrIwrcUQbjPuyQt2rvUIAVd2tdPKugn1WTdQ
+
+
+### Get unique caregiver
+GET http://localhost:3000/caregivers/cl9lyihgg0000ba4d8hlp0uct
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2NjY1NTAxMDAsImV4cCI6MTY2Nzg0NjEwMCwiaXNzIjoiVGVjaENhcmUiLCJzdWIiOiJjbDlldzgwNmwwMDAwYmFiaW42bmF3Njd1In0.WlAcygJsrIwrcUQbjPuyQt2rvUIAVd2tdPKugn1WTdQ
+
+
+### 
