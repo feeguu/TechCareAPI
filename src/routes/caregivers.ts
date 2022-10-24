@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client"
+import { PrismaClient, Role, User } from "@prisma/client"
 import { hash } from "argon2"
 import dayjs from "dayjs"
 import customParserFormat from "dayjs/plugin/customParseFormat"
@@ -19,6 +19,10 @@ type CreateCaregiverRequestBody = {
 	name: string
 	birthdate: string
 	contact: string
+}
+
+type UpdateCaregiverRequestBody = CreateCaregiverRequestBody & {
+	role: Role
 }
 
 caregiversRoute.post("/", isAuth, isAdmin, async (req, res, next) => {
@@ -74,6 +78,7 @@ caregiversRoute.get("/", isAuth, isAdmin, async (req, res, next) => {
 				role: true,
 				username: true,
 				contact: true,
+				birthdate: true,
 			},
 		})
 
@@ -85,7 +90,7 @@ caregiversRoute.get("/", isAuth, isAdmin, async (req, res, next) => {
 
 caregiversRoute.get("/:caregiverId", isAuth, async (req, res, next) => {
 	try {
-		const { caregiverId } = req.params
+		const { caregiverId } = req.params as { caregiverId: string }
 		const userReqId = getUserId(res.locals.token)
 		if (userReqId !== caregiverId && (await getRole(userReqId)) !== "ADMIN") {
 			throw unautheticatedError
@@ -103,6 +108,39 @@ caregiversRoute.get("/:caregiverId", isAuth, async (req, res, next) => {
 		if (caregiver?.role === "ADMIN") {
 			return res.status(200).json({})
 		}
+		return res.status(200).json(caregiver)
+	} catch (e) {
+		next(e)
+	}
+})
+
+caregiversRoute.post("/:caregiverId", isAuth, isAdmin, async (req, res, next) => {
+	try {
+		const { name, birthdate, contact, role } = req.body as UpdateCaregiverRequestBody
+		if (!name || !birthdate || !contact) throw missingParamsError
+
+		const { caregiverId } = req.params as { caregiverId: string }
+		const user = await prisma.user.findUnique({ where: { id: caregiverId } })
+
+		if (!user) throw new HttpError(400, "Caregiver not found.")
+
+		if (user.role !== "CAREGIVER") throw unautheticatedError
+
+		let sanitizedName = name.trim().replace(/\s{2,}/g, " ")
+		const date = dayjs(birthdate, "YYYY-MM-DD").toDate()
+
+		const caregiver = await prisma.user.update({
+			where: { id: caregiverId },
+			data: { name: sanitizedName, birthdate: date, contact: contact, role },
+			select: {
+				id: true,
+				name: true,
+				role: true,
+				username: true,
+				contact: true,
+			},
+		})
+
 		return res.status(200).json(caregiver)
 	} catch (e) {
 		next(e)
