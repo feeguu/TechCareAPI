@@ -2,6 +2,7 @@ import express, { ErrorRequestHandler } from "express"
 import caregiversRoute from "./routes/caregivers"
 import userRoutes from "./routes/user"
 import { HttpError } from "./errors/HttpError"
+import patientsRoutes from "./routes/patients"
 
 const app = express()
 
@@ -9,6 +10,7 @@ app.use(express.json())
 
 app.use("/user", userRoutes)
 app.use("/caregivers", caregiversRoute)
+app.use("/patients", patientsRoutes)
 
 const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
 	if (err instanceof HttpError) {
