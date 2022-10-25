@@ -32,5 +32,54 @@ patientsRoutes.get("/", isAuth, async (req, res, next) => {
 	}
 })
 
+patientsRoutes.post("/", isAuth, isAdmin, async (req, res, next) => {
+	try {
+		dayjs.extend(customParserFormat)
+		const {
+			name,
+			birthdate,
+			severity,
+			bloodType,
+			allergies,
+			contact,
+			height,
+			medicines,
+			weaknesses,
+			weight,
+		} = req.body as PatientRequestBody
+		if (
+			!name ||
+			!birthdate ||
+			!severity ||
+			!bloodType ||
+			!allergies ||
+			!contact ||
+			!height ||
+			!medicines ||
+			!weaknesses ||
+			!weight
+		) {
+			throw missingParamsError
+		}
+		const date = dayjs(birthdate, "YYYY-MM-DD").toDate()
+		const patient = await prisma.patient.create({
+			data: {
+				name,
+				birthdate: date,
+				severity,
+				bloodType,
+				allergies,
+				contact,
+				height,
+				medicines,
+				weaknesses,
+				weight,
+			},
+		})
+		return res.status(200).json(patient)
+	} catch (e) {
+		next(e)
+	}
+})
 
 export default patientsRoutes
