@@ -9,7 +9,7 @@ const prisma = new PrismaClient()
 const patientsRoutes = express.Router()
 
 patientsRoutes.get("/", isAuth, async (req, res, next) => {
-    try {
+	try {
         const userId = getUserId(res.locals.token)
         const role = await getRole(userId)
         if (role === "CAREGIVER") {
@@ -17,9 +17,12 @@ patientsRoutes.get("/", isAuth, async (req, res, next) => {
             return res.status(200).json(patients)
         }
         if (role === "ADMIN") {
-            const patients = await prisma.patient.findMany()
-            return res.status(200).json(patients)
-        }
+		const patients = await prisma.patient.findMany()
+		return res.status(200).json(patients)
+	} catch (e) {
+		next(e)
+	}
+})
 
     } catch (e) {
         next(e)
