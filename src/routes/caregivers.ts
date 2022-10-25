@@ -92,9 +92,11 @@ caregiversRoute.get("/:caregiverId", isAuth, async (req, res, next) => {
 	try {
 		const { caregiverId } = req.params as { caregiverId: string }
 		const userReqId = getUserId(res.locals.token)
+
 		if (userReqId !== caregiverId && (await getRole(userReqId)) !== "ADMIN") {
 			throw unautheticatedError
 		}
+
 		const caregiver = await prisma.user.findUnique({
 			where: { id: caregiverId },
 			select: {
@@ -105,9 +107,9 @@ caregiversRoute.get("/:caregiverId", isAuth, async (req, res, next) => {
 				contact: true,
 			},
 		})
-		if (caregiver?.role === "ADMIN") {
-			return res.status(200).json({})
-		}
+
+		if (!caregiver || caregiver.role !== "CAREGIVER") throw new HttpError(400, "Caregiver not found.")
+
 		return res.status(200).json(caregiver)
 	} catch (e) {
 		next(e)
@@ -117,14 +119,13 @@ caregiversRoute.get("/:caregiverId", isAuth, async (req, res, next) => {
 caregiversRoute.post("/:caregiverId", isAuth, isAdmin, async (req, res, next) => {
 	try {
 		const { name, birthdate, contact, role } = req.body as UpdateCaregiverRequestBody
+
 		if (!name || !birthdate || !contact) throw missingParamsError
 
 		const { caregiverId } = req.params as { caregiverId: string }
 		const user = await prisma.user.findUnique({ where: { id: caregiverId } })
 
-		if (!user) throw new HttpError(400, "Caregiver not found.")
-
-		if (user.role !== "CAREGIVER") throw unautheticatedError
+		if (!user || user.role !== "CAREGIVER") throw new HttpError(400, "Caregiver not found.")
 
 		let sanitizedName = name.trim().replace(/\s{2,}/g, " ")
 		const date = dayjs(birthdate, "YYYY-MM-DD").toDate()
@@ -142,6 +143,22 @@ caregiversRoute.post("/:caregiverId", isAuth, isAdmin, async (req, res, next) =>
 		})
 
 		return res.status(200).json(caregiver)
+	} catch (e) {
+		next(e)
+	}
+})
+
+caregiversRoute.delete("/:caregiverId", isAuth, isAdmin, async (req, res, next) => {
+	try {
+		const { caregiverId } = req.params as { caregiverId: string }
+
+		const user = await prisma.user.findUnique({ where: { id: caregiverId } })
+
+		if (!user || user.role !== "CAREGIVER") throw new HttpError(400, "Caregiver not found.")
+
+		const caregiver = await prisma.user.delete({ where: { id: caregiverId } })
+
+		return res.status(204).json({})
 	} catch (e) {
 		next(e)
 	}
