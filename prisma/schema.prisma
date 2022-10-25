@@ -12,7 +12,7 @@ datasource db {
 
 model User {
   id        String   @id @default(cuid())
-  role Role
+  role      Role
   username  String   @unique
   password  String
   name      String
@@ -24,10 +24,17 @@ model User {
 }
 
 model Patient {
-  id        String   @id @default(cuid())
-  name      String
-  birthdate DateTime @db.Date
-  severity  Severity @default(LIGHT)
+  id         String   @id @default(cuid())
+  name       String
+  birthdate  DateTime @db.Date
+  severity   Severity @default(LIGHT)
+  bloodType  String
+  weight     Float
+  medicines  String
+  allergies  String
+  weaknesses String
+  contact    String
+  height     Float
 
   activities     Activity[]
   medicalRecords MedicalRecord[]
