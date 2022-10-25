@@ -42,8 +42,7 @@ userRoutes.post("/auth", async (req, res, next) => {
 
 userRoutes.get("/auth", isAuth, async (req, res, next) => {
 	try {
-		const token = res.locals.token as string
-		const userId = getUserId(token)
+		const userId = res.locals.id
 
 		const user = await prisma.user.findUnique({
 			where: { id: userId },
@@ -69,8 +68,7 @@ userRoutes.get("/auth", isAuth, async (req, res, next) => {
 
 userRoutes.post("/change-password", isAuth, async (req, res, next) => {
 	try {
-		const token = res.locals.token
-		const userId = getUserId(token)
+		const userId = res.locals.id
 
 		const { oldPassword, newPassword } = req.body as ChangePasswordRequestBody
 
@@ -86,8 +84,7 @@ userRoutes.post("/change-password", isAuth, async (req, res, next) => {
 			throw new HttpError(403, "Old password is incorrect.")
 
 		await prisma.user.update({ where: { id: userId }, data: { password: await hash(newPassword) } })
-		return res.status(200).json({successful: true})
-
+		return res.status(200).json({ successful: true })
 	} catch (e) {
 		next(e)
 	}

@@ -95,9 +95,9 @@ caregiversRoute.get("/", isAuth, isAdmin, async (req, res, next) => {
 caregiversRoute.get("/:caregiverId", isAuth, async (req, res, next) => {
 	try {
 		const { caregiverId } = req.params as { caregiverId: string }
-		const userReqId = getUserId(res.locals.token)
+		const userReqId = res.locals.id
 
-		if (userReqId !== caregiverId && (await getRole(userReqId)) !== "ADMIN") {
+		if (userReqId !== caregiverId && res.locals.role !== "ADMIN") {
 			throw unautheticatedError
 		}
 

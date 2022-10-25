@@ -9,11 +9,14 @@ export default async function isAuth(req: Request, res: Response, next: NextFunc
 	try {
 		const token = req.headers.authorization?.split(" ")[1]
 		if (token && validateToken(token)) {
-			if (await prisma.user.findUnique({ where: { id: getUserId(token) } })) {
+			const user = await prisma.user.findUnique({ where: { id: getUserId(token) } })
+			if (user) {
 				res.locals.token = token
+				res.locals.id = user.id
+				res.locals.role = user.role
 				return next()
-			
-		}}
+			}
+		}
 		throw unautheticatedError
 	} catch (e) {
 		next(e)
