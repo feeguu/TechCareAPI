@@ -185,4 +185,23 @@ patientsRoutes.post("/:patientId", isAuth, async (req, res, next) => {
 	}
 })
 
+patientsRoutes.get("/:patientId/caregivers", isAuth, isAdmin, async (req, res, next) => {
+	try {
+		const { patientId } = req.params as { patientId: string }
+		const caregivers = await prisma.user.findMany({
+			where: { care: { some: { patientId } } },
+			select: {
+				id: true,
+				name: true,
+				role: true,
+				username: true,
+				contact: true,
+			},
+		})
+		res.status(200).json(caregivers)
+	} catch (e) {
+		next(e)
+	}
+})
+
 export default patientsRoutes
