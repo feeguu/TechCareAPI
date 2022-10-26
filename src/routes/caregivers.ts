@@ -65,6 +65,13 @@ caregiversRoute.post("/", isAuth, isAdmin, async (req, res, next) => {
 				password: await hash(password),
 				username: `${username}${numberOfSimilarUsers + 1}`,
 			},
+			select: {
+				id: true,
+				name: true,
+				role: true,
+				username: true,
+				contact: true,
+			},
 		})
 
 		return res.status(200).json(caregiver)
