@@ -33,13 +33,12 @@ caregiversRoute.post("/", isAuth, isAdmin, async (req, res, next) => {
 
 		if (!name || !birthdate || !contact) throw missingParamsError
 
-		let sanitizedName = name
-			.trim()
-			.replace(/\s{2,}/g, " ")
+		let sanitizedName = name.trim().replace(/\s{2,}/g, " ")
+
+		let splittedName = sanitizedName
 			.normalize("NFD")
 			.replace(/[\u0300-\u036f]/g, "")
-
-		let splittedName = sanitizedName.split(" ")
+			.split(" ")
 
 		if (splittedName.length === 1) throw new HttpError(400, "Name is invalid")
 
