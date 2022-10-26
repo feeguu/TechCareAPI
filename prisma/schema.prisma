@@ -45,11 +45,12 @@ model Care {
   id            String   @id @default(cuid())
   startDatetime DateTime
   endDatetime   DateTime
-
-  Patient     Patient? @relation(fields: [patientId], references: [id])
-  patientId   String?
-  Caregiver   User?    @relation(fields: [caregiverId], references: [id])
-  caregiverId String?
+  weekday       Int
+  
+  Patient       Patient? @relation(fields: [patientId], references: [id])
+  patientId     String?
+  Caregiver     User?    @relation(fields: [caregiverId], references: [id])
+  caregiverId   String?
 }
 
 model MedicalRecord {
