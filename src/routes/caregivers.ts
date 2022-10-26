@@ -169,4 +169,17 @@ caregiversRoute.delete("/:caregiverId", isAuth, isAdmin, async (req, res, next) 
 	}
 })
 
+caregiversRoute.get("/:caregiverId/patients", isAuth, async (req, res, next) => {
+	try {
+		const { caregiverId } = req.params as { caregiverId: string }
+		if (res.locals.id === caregiverId || res.locals.role === "ADMIN") {
+			const patients = await prisma.patient.findMany({ where: { care: { some: { caregiverId } } } })
+			return res.status(200).json(patients)
+		}
+		throw unautheticatedError
+	} catch (e) {
+		next(e)
+	}
+})
+
 export default caregiversRoute
