@@ -15,6 +15,8 @@ const prisma = new PrismaClient()
 
 const caregiversRoute = express.Router()
 
+dayjs.extend(customParserFormat)
+
 type CreateCaregiverRequestBody = {
 	name: string
 	birthdate: string
@@ -27,7 +29,6 @@ type UpdateCaregiverRequestBody = CreateCaregiverRequestBody & {
 
 caregiversRoute.post("/", isAuth, isAdmin, async (req, res, next) => {
 	try {
-		dayjs.extend(customParserFormat)
 		const { name, birthdate, contact } = req.body as CreateCaregiverRequestBody
 
 		if (!name || !birthdate || !contact) throw missingParamsError
