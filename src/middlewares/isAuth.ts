@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client"
 import { NextFunction, Request, Response } from "express"
-import unautheticatedError from "../errors/unautheticatedError"
+import unauthorizedError from "../errors/unauthorizedError"
 import { getUserId, validateToken } from "../utils/token"
 
 const prisma = new PrismaClient()
@@ -17,7 +17,7 @@ export default async function isAuth(req: Request, res: Response, next: NextFunc
 				return next()
 			}
 		}
-		throw unautheticatedError
+		throw unauthorizedError
 	} catch (e) {
 		next(e)
 	}

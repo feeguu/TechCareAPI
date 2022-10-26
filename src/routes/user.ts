@@ -3,7 +3,7 @@ import { hash, verify } from "argon2"
 import { PrismaClient } from "@prisma/client"
 import { generateToken, getUserId } from "../utils/token"
 import isAuth from "../middlewares/isAuth"
-import unautheticatedError from "../errors/unautheticatedError"
+import unauthorizedError from "../errors/unauthorizedError"
 import { HttpError } from "../errors/HttpError"
 import missingParamsError from "../errors/missingParamsError"
 
@@ -57,7 +57,7 @@ userRoutes.get("/auth", isAuth, async (req, res, next) => {
 		})
 
 		if (!user) {
-			throw unautheticatedError
+			throw unauthorizedError
 		}
 
 		return res.status(200).json({ authenticated: true, user })
