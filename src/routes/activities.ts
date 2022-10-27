@@ -106,4 +106,33 @@ activitiesRoutes.post("/patient/:patientId", isAuth, async (req, res, next) => {
 	}
 })
 
+activitiesRoutes.get("/caregiver/:caregiverId", isAuth, async (req, res, next) => {
+	try {
+		const { caregiverId } = req.params as { caregiverId: string }
+		if (res.locals.role === "CAREGIVER" && res.locals.id !== caregiverId) {
+			throw unauthorizedError
+		}
+		const activities = await prisma.activity.findMany({
+			where: { Patient: { care: { some: { caregiverId } } } },
+			include: { Patient: { include: { care: true } } },
+		})
+		const caregiversActivities = activities.filter((activity) => {
+			const activityStart = dayjs(activity.startDatetime)
+			const activityEnd = dayjs(activity.endDatetime)
+			const validCare = activity.Patient.care.find((care) => {
+				return (
+					isActivityIntervalWithinCareInterval(
+						{ start: activityStart, end: activityEnd },
+						{ start: care.startTime, end: care.endTime }
+					) && activityStart.day() === care.weekday
+				)
+			})
+			return validCare
+		})
+		res.status(200).json(caregiversActivities)
+	} catch (e) {
+		next(e)
+	}
+})
+
 export default activitiesRoutes
