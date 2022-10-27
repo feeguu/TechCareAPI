@@ -6,7 +6,7 @@ POST http://localhost:3000/user/auth
 Content-Type: application/json
 
 {
-    "username": "gustavo.siqueira2",
+    "username": "gustavo.siqueira1",
     "password": "gustavo2005"
 }
 
@@ -14,7 +14,7 @@ Content-Type: application/json
 ### Get auth
 GET http://localhost:3000/user/auth
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2NjY1NjYzNzEsImV4cCI6MTY2Nzg2MjM3MSwiaXNzIjoiVGVjaENhcmUiLCJzdWIiOiJjbDlseWloZ2cwMDAwYmE0ZDhobHAwdWN0In0.P30LMvLHobJWip8gKj8TDYBQp9nMARyg1HcpZ59lKiE
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2NjY1NTAxMDAsImV4cCI6MTY2Nzg0NjEwMCwiaXNzIjoiVGVjaENhcmUiLCJzdWIiOiJjbDlldzgwNmwwMDAwYmFiaW42bmF3Njd1In0.WlAcygJsrIwrcUQbjPuyQt2rvUIAVd2tdPKugn1WTdQ
 
 
 ###Change password
@@ -36,7 +36,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2NjY1NTAxM
 
 
 {
-    "name": "Gustavo Santos Siqueira",
+    "name": "Mario Junior Silva Paixão",
     "contact": "(11) 11111-11111",
     "birthdate": "2005-01-01"
 }
@@ -54,4 +54,98 @@ Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2NjY1NTAxMDAsImV4cCI6MTY2Nzg0NjEwMCwiaXNzIjoiVGVjaENhcmUiLCJzdWIiOiJjbDlldzgwNmwwMDAwYmFiaW42bmF3Njd1In0.WlAcygJsrIwrcUQbjPuyQt2rvUIAVd2tdPKugn1WTdQ
 
 
-### 
+### Update caregiver
+POST http://localhost:3000/caregivers/cl9ewaxgh0004babixhbe9ljr
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2NjY1NTAxMjQsImV4cCI6MTY2Nzg0NjEyNCwiaXNzIjoiVGVjaENhcmUiLCJzdWIiOiJjbDlld2F4Z2gwMDA0YmFiaXhoYmU5bGpyIn0.Jnse8IIzV5cr6aGJaa6UaO3sneJFeY-D3MASfr7N1PY
+
+{
+    "name": "Cuidador da Silva Neto Jr.",
+    "birthdate": "1990-01-01",
+    "role": "CAREGIVER",
+    "contact": "(11) 11111-1111"
+}
+
+
+### Delete caregiver
+DELETE http://localhost:3000/caregivers/cl9oyanny0000ba802w8es8e9
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2NjY1NTAxMDAsImV4cCI6MTY2Nzg0NjEwMCwiaXNzIjoiVGVjaENhcmUiLCJzdWIiOiJjbDlldzgwNmwwMDAwYmFiaW42bmF3Njd1In0.WlAcygJsrIwrcUQbjPuyQt2rvUIAVd2tdPKugn1WTdQ
+
+
+### Get all patients
+GET http://localhost:3000/patients/
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2NjY1NTAxMDAsImV4cCI6MTY2Nzg0NjEwMCwiaXNzIjoiVGVjaENhcmUiLCJzdWIiOiJjbDlldzgwNmwwMDAwYmFiaW42bmF3Njd1In0.WlAcygJsrIwrcUQbjPuyQt2rvUIAVd2tdPKugn1WTdQ
+
+
+
+###Create patient
+POST http://localhost:3000/patients/
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2NjY1NTAxMDAsImV4cCI6MTY2Nzg0NjEwMCwiaXNzIjoiVGVjaENhcmUiLCJzdWIiOiJjbDlldzgwNmwwMDAwYmFiaW42bmF3Njd1In0.WlAcygJsrIwrcUQbjPuyQt2rvUIAVd2tdPKugn1WTdQ
+
+{
+    "name": "Rogério Aparecido de Melo",
+    "birthdate": "1962-01-16",
+    "severity": "SEVERE",
+    "bloodType": "AB+",
+    "allergies": "Dipirona",
+    "contact": "(11) 11111-1111",
+    "height": 1.80,
+    "medicines": "Glifage",
+    "weaknesses": "Diabetes",
+    "weight": 70
+}
+
+
+### Get unique patient
+GET http://localhost:3000/patients/cl9opioos0000baelif3vhsno
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2NjY3Mzk3MTQsImV4cCI6MTY2ODAzNTcxNCwiaXNzIjoiVGVjaENhcmUiLCJzdWIiOiJjbDlvb2JsY3AwMDAwYmF3Y3A4NGd0ZGt6In0.i69SJNUbx5QcRq9XWLhZKnI7aBcHyyg9UkI-jQ1UZFM
+
+
+### Update patient
+POST http://localhost:3000/patients/cl9opioos0000baelif3vhsno
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2NjY3NDM0NzMsImV4cCI6MTY2ODAzOTQ3MywiaXNzIjoiVGVjaENhcmUiLCJzdWIiOiJjbDlvbzVnZGwwMDAwYmF6Ym55Z2lqcTB2In0.e6meqSuM5rFR6VJbBeWZd1zMOYCBHwNOOREPApaWIIk
+
+{
+    "name": "Marcos Leonardo Santos",
+    "birthdate": "1938-07-18",
+    "severity": "SEVERE",
+    "bloodType": "B+",
+    "allergies": "Amendoim\nParecetamol",
+    "contact": "(11) 11111-1111",
+    "height": 1.66,
+    "medicines": "Maleato de Enalapril 20mg\nGlifage Xr 500mg",
+    "weaknesses": "Diabetes\nPressão Alta",
+    "weight": 61.4
+}
+
+
+### Get all patients from a caregiver
+GET http://localhost:3000/caregivers/cl9oo5njt0002bazbp7e7nu7e/patients
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2NjY1NTAxMDAsImV4cCI6MTY2Nzg0NjEwMCwiaXNzIjoiVGVjaENhcmUiLCJzdWIiOiJjbDlldzgwNmwwMDAwYmFiaW42bmF3Njd1In0.WlAcygJsrIwrcUQbjPuyQt2rvUIAVd2tdPKugn1WTdQ
+
+
+### Get all caregivers from a patient
+GET http://localhost:3000/patients/cl9opioos0000baelif3vhsno/caregivers
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2NjY1NTAxMDAsImV4cCI6MTY2Nzg0NjEwMCwiaXNzIjoiVGVjaENhcmUiLCJzdWIiOiJjbDlldzgwNmwwMDAwYmFiaW42bmF3Njd1In0.WlAcygJsrIwrcUQbjPuyQt2rvUIAVd2tdPKugn1WTdQ
+
+
+
+
+### Create activity to a patient with a caregiver
+POST http://localhost:3000/activities/patient/cl9q7whqi0000baldmhqyitj1/
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2NjY4MzkzNTIsImV4cCI6MTY2ODEzNTM1MiwiaXNzIjoiVGVjaENhcmUiLCJzdWIiOiJjbDlvbzVnZGwwMDAwYmF6Ym55Z2lqcTB2In0.AqEu6E_2WKKwi_1T5LlZg4MLMWTLcNlD606DFewaLMI
+
+{
+    "title": "Médico",
+    "description": "Cardiologista na Av. Paulista 5000",
+    "startDatetime": "2022-10-31 10:00",
+    "endDatetime": "2022-10-31 12:00"
+}
