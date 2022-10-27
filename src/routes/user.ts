@@ -1,7 +1,7 @@
 import express from "express"
 import { hash, verify } from "argon2"
 import { PrismaClient } from "@prisma/client"
-import { generateToken, getUserId } from "../utils/token"
+import { generateToken } from "../utils/token"
 import isAuth from "../middlewares/isAuth"
 import unauthorizedError from "../errors/unauthorizedError"
 import { HttpError } from "../errors/HttpError"
