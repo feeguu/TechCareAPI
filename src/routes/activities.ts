@@ -4,10 +4,8 @@ import express from "express"
 import { HttpError } from "../errors/HttpError"
 import missingParamsError from "../errors/missingParamsError"
 import isAuth from "../middlewares/isAuth"
-import customParserFormat from "dayjs/plugin/customParseFormat"
-import isSameOrBefore from "dayjs/plugin/isSameOrBefore"
-import isSameOrAfter from "dayjs/plugin/isSameOrAfter"
 import unauthorizedError from "../errors/unauthorizedError"
+import { isActivityIntervalWithinCareInterval, isIntervalOverlaid, isIntervalValid } from "../utils/interval"
 
 type ActivityRequestBody = {
 	title: string
@@ -15,9 +13,6 @@ type ActivityRequestBody = {
 	startDatetime: string
 	endDatetime: string
 }
-dayjs.extend(isSameOrBefore)
-dayjs.extend(isSameOrAfter)
-dayjs.extend(customParserFormat)
 
 const prisma = new PrismaClient()
 
@@ -48,7 +43,6 @@ activitiesRoutes.get("/patient/:patientId", isAuth, async (req, res, next) => {
 	}
 })
 
-//TODO: need to verify if already exists activity in the same period
 activitiesRoutes.post("/patient/:patientId", isAuth, async (req, res, next) => {
 	try {
 		const { patientId } = req.params as { patientId: string }
@@ -62,28 +56,17 @@ activitiesRoutes.post("/patient/:patientId", isAuth, async (req, res, next) => {
 		const activityStart = dayjs(startDatetime, "YYYY-MM-DD HH:mm")
 		const activityEnd = dayjs(endDatetime, "YYYY-MM-DD HH:mm")
 
-		if (
-			!activityStart.isValid() ||
-			!activityEnd.isValid() ||
-			activityStart.isBefore(dayjs()) ||
-			activityEnd.isBefore(activityStart) ||
-			!activityStart.isSame(activityEnd, "day")
-		)
+		if (!isIntervalValid({ start: activityStart, end: activityEnd }))
 			throw new HttpError(400, "Start or end date is invalid.")
 
-			const activities = await prisma.activity.findMany({ where: { patientId } })
-			const conflitingActivity = activities.find((activity) => {
-				return (
-					(activityStart.isSameOrAfter(dayjs(activity.startDatetime)) &&
-						activityStart.isBefore(dayjs(activity.endDatetime))) ||
-					(activityEnd.isAfter(dayjs(activity.startDatetime)) &&
-						activityEnd.isSameOrBefore(dayjs(activity.endDatetime))) ||
-					(activityStart.isSameOrBefore(dayjs(activity.startDatetime)) &&
-						activityEnd.isSameOrAfter(dayjs(activity.endDatetime)))
-				)
-			})
+		const activities = await prisma.activity.findMany({ where: { patientId } })
 
-		if (conflitingActivity) throw new HttpError(400, "Another activity is occcupying the same period.")
+		const conflitingActivity = activities.find((activity) => {
+			return isIntervalOverlaid(
+				{ start: activityStart, end: activityEnd },
+				{ start: dayjs(activity.startDatetime), end: dayjs(activity.endDatetime) }
+			)
+		})
 
 		if (res.locals.role === "CAREGIVER") {
 			const cares = await prisma.care.findMany({
@@ -91,16 +74,16 @@ activitiesRoutes.post("/patient/:patientId", isAuth, async (req, res, next) => {
 			})
 			if (cares.length === 0) throw unauthorizedError
 			const validCare = cares.find((care) => {
-				const careStart = activityStart
-					.hour(dayjs(care.startTime).hour())
-					.minute(dayjs(care.startTime).minute())
-				const careEnd = activityEnd
-					.hour(dayjs(care.endTime).hour())
-					.minute(dayjs(care.endTime).minute())
-				return careStart.isSameOrBefore(activityStart) && activityEnd.isSameOrBefore(careEnd)
+				isActivityIntervalWithinCareInterval(
+					{ start: activityStart, end: activityEnd },
+					{ start: care.startTime, end: care.endTime }
+				)
 			})
 			if (!validCare) throw new HttpError(400, "Activity time is outside the care period.")
 		}
+		
+		if (conflitingActivity) throw new HttpError(400, "Another activity is occcupying the same period.")
+
 		const patient = await prisma.patient.update({
 			where: { id: patientId },
 			data: {
