@@ -12,11 +12,11 @@ type PatientRequestBody = {
 	birthdate: string
 	severity: Severity
 	bloodType: string
-	allergies: string
+	allergies?: string
 	contact: string
 	height: number
-	medicines: string
-	weaknesses: string
+	medicines?: string
+	weaknesses?: string
 	weight: number
 }
 
@@ -54,11 +54,8 @@ patientsRoutes.post("/", isAuth, isAdmin, async (req, res, next) => {
 			!birthdate ||
 			!severity ||
 			!bloodType ||
-			!allergies ||
 			!contact ||
 			!height ||
-			!medicines ||
-			!weaknesses ||
 			!weight
 		) {
 			throw missingParamsError
@@ -125,11 +122,8 @@ patientsRoutes.post("/:patientId", isAuth, async (req, res, next) => {
 			!birthdate ||
 			!severity ||
 			!bloodType ||
-			!allergies ||
 			!contact ||
 			!height ||
-			!medicines ||
-			!weaknesses ||
 			!weight
 		) {
 			throw missingParamsError

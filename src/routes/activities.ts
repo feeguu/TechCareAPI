@@ -48,10 +48,10 @@ activitiesRoutes.post("/patient/:patientId", isAuth, async (req, res, next) => {
 		const { patientId } = req.params as { patientId: string }
 		const { title, description, startDatetime, endDatetime } = req.body as ActivityRequestBody
 
-		if (!title || !description || !startDatetime || !endDatetime) throw missingParamsError
+		if (!title || !startDatetime || !endDatetime) throw missingParamsError
 
 		const sanitizedTitle = title.trim().replace(/\s{2,}/g, " ")
-		const sanitizedDescription = description.trim().replace(/\s{2,}/g, " ")
+		const sanitizedDescription = description?.trim().replace(/\s{2,}/g, " ")
 
 		const activityStart = dayjs(startDatetime, "YYYY-MM-DD HH:mm")
 		const activityEnd = dayjs(endDatetime, "YYYY-MM-DD HH:mm")
@@ -81,7 +81,7 @@ activitiesRoutes.post("/patient/:patientId", isAuth, async (req, res, next) => {
 			})
 			if (!validCare) throw new HttpError(400, "Activity time is outside the care period.")
 		}
-		
+
 		if (conflitingActivity) throw new HttpError(400, "Another activity is occcupying the same period.")
 
 		const patient = await prisma.patient.update({

@@ -136,6 +136,10 @@ Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2NjY1NTAxMDAsImV4cCI6MTY2Nzg0NjEwMCwiaXNzIjoiVGVjaENhcmUiLCJzdWIiOiJjbDlldzgwNmwwMDAwYmFiaW42bmF3Njd1In0.WlAcygJsrIwrcUQbjPuyQt2rvUIAVd2tdPKugn1WTdQ
 
 
+###Get all activities from a patient
+GET http://localhost:3000/activities/patient/cl9q7whqi0000baldmhqyitj1/
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2NjY4MzkzNTIsImV4cCI6MTY2ODEzNTM1MiwiaXNzIjoiVGVjaENhcmUiLCJzdWIiOiJjbDlvbzVnZGwwMDAwYmF6Ym55Z2lqcTB2In0.AqEu6E_2WKKwi_1T5LlZg4MLMWTLcNlD606DFewaLMI
 
 
 ### Create activity to a patient with a caregiver
@@ -146,6 +150,12 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2NjY4MzkzN
 {
     "title": "Médico",
     "description": "Cardiologista na Av. Paulista 5000",
-    "startDatetime": "2022-10-31 10:00",
-    "endDatetime": "2022-10-31 12:00"
+    "startDatetime": "2022-10-31 08:00",
+    "endDatetime": "2022-10-31 18:00"
 }
+
+
+### Get all activities from a caregiver
+GET http://localhost:3000/activities/caregiver/cl9oo5gdl0000bazbnygijq0v
+Content-Type: application/json
+Authorization: Bearer

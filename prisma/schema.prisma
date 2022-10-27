@@ -30,9 +30,9 @@ model Patient {
   severity   Severity @default(LIGHT)
   bloodType  String
   weight     Float
-  medicines  String
-  allergies  String
-  weaknesses String
+  medicines  String?
+  allergies  String?
+  weaknesses String?
   contact    String
   height     Float
 
@@ -68,7 +68,7 @@ model MedicalRecord {
 model Activity {
   id            String   @id @default(cuid())
   title         String
-  description   String
+  description   String?
   startDatetime DateTime
   endDatetime   DateTime
 
