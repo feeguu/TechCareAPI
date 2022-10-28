@@ -4,6 +4,7 @@ import userRoutes from "./routes/user"
 import { HttpError } from "./errors/HttpError"
 import patientsRoutes from "./routes/patients"
 import activitiesRoutes from "./routes/activities"
+import caresRoute from "./routes/care"
 
 const app = express()
 
@@ -13,6 +14,7 @@ app.use("/user", userRoutes)
 app.use("/caregivers", caregiversRoute)
 app.use("/patients", patientsRoutes)
 app.use("/activities", activitiesRoutes)
+app.use("/cares", caresRoute)
 
 const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
 	if (err instanceof HttpError) {
