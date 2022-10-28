@@ -189,8 +189,7 @@ activitiesRoutes.post("/:activityId", isAuth, async (req, res, next) => {
 
 		const patientActivities = await prisma.activity.findMany({ where: { patientId: activity.patientId } })
 		const conflitingActivity = patientActivities.find((patientActivity) => {
-			console.log({
-			})
+			console.log({})
 			return (
 				patientActivity.id !== activityId &&
 				isIntervalOverlaid(
@@ -217,6 +216,43 @@ activitiesRoutes.post("/:activityId", isAuth, async (req, res, next) => {
 		})
 
 		return res.status(200).json(newActivity)
+	} catch (e) {
+		next(e)
+	}
+})
+
+activitiesRoutes.delete("/:activityId", isAuth, async (req, res, next) => {
+	try {
+		const { activityId } = req.params as { activityId: string }
+		const activity = await prisma.activity.findUnique({
+			where: { id: activityId },
+			include: { Patient: { include: { care: true } } },
+		})
+
+		if (!activity) throw new HttpError(400, "Activity not found.")
+
+		if (res.locals.role === "CAREGIVER") {
+			const activityStart = dayjs(activity.startDatetime)
+			const activityEnd = dayjs(activity.endDatetime)
+
+			//Check if caregiver is responsable
+			const validCare = activity.Patient.care.find((care) => {
+				return (
+					isActivityIntervalWithinCareInterval(
+						{ start: activityStart, end: activityEnd },
+						{ start: care.startTime, end: care.endTime }
+					) &&
+					activityStart.day() === care.weekday &&
+					care.caregiverId === res.locals.id
+				)
+			})
+
+			if (!validCare) throw unauthorizedError
+		}
+
+		await prisma.activity.delete({ where: { id: activityId } })
+		
+		return res.status(204).json({})
 	} catch (e) {
 		next(e)
 	}
