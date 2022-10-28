@@ -4,6 +4,7 @@ import express from "express"
 import { HttpError } from "../errors/HttpError"
 import missingParamsError from "../errors/missingParamsError"
 import isAuth from "../middlewares/isAuth"
+import customParserFormat from "dayjs/plugin/customParseFormat"
 import unauthorizedError from "../errors/unauthorizedError"
 import { isActivityIntervalWithinCareInterval, isIntervalOverlaid, isIntervalValid } from "../utils/interval"
 
@@ -13,6 +14,8 @@ type ActivityRequestBody = {
 	startDatetime: string
 	endDatetime: string
 }
+
+dayjs.extend(customParserFormat)
 
 const prisma = new PrismaClient()
 
@@ -130,6 +133,90 @@ activitiesRoutes.get("/caregiver/:caregiverId", isAuth, async (req, res, next) =
 			return validCare
 		})
 		res.status(200).json(caregiversActivities)
+	} catch (e) {
+		next(e)
+	}
+})
+
+activitiesRoutes.post("/:activityId", isAuth, async (req, res, next) => {
+	try {
+		const { activityId } = req.params as { activityId: string }
+		const { title, description, startDatetime, endDatetime } = req.body as ActivityRequestBody
+
+		if (!title || !startDatetime || !endDatetime) throw missingParamsError
+
+		const sanitizedTitle = title.trim().replace(/\s{2,}/g, " ")
+		const sanitizedDescription = description?.trim().replace(/\s{2,}/g, " ")
+
+		const newActivityStart = dayjs(startDatetime, "YYYY-MM-DD HH:mm")
+		const newActivityEnd = dayjs(endDatetime, "YYYY-MM-DD HH:mm")
+
+		if (!isIntervalValid({ start: newActivityStart, end: newActivityEnd }))
+			throw new HttpError(400, "Start or end date is invalid.")
+
+		const activity = await prisma.activity.findUnique({
+			where: { id: activityId },
+			include: { Patient: { include: { care: true } } },
+		})
+
+		if (!activity) throw new HttpError(400, "Activity not found.")
+		if (res.locals.role === "CAREGIVER") {
+			const activityStart = dayjs(activity.startDatetime)
+			const activityEnd = dayjs(activity.endDatetime)
+
+			//Check if caregiver is responsable
+			const validCare = activity.Patient.care.find((care) => {
+				return (
+					isActivityIntervalWithinCareInterval(
+						{ start: activityStart, end: activityEnd },
+						{ start: care.startTime, end: care.endTime }
+					) &&
+					activityStart.day() === care.weekday &&
+					care.caregiverId === res.locals.id
+				)
+			})
+			if (!validCare) throw unauthorizedError
+
+			//Check if new activity overlay care interval
+			if (
+				!isActivityIntervalWithinCareInterval(
+					{ start: newActivityStart, end: newActivityEnd },
+					{ start: validCare.startTime, end: validCare.endTime }
+				)
+			)
+				throw new HttpError(400, "Another activity is occcupying the same period.")
+		}
+
+		const patientActivities = await prisma.activity.findMany({ where: { patientId: activity.patientId } })
+		const conflitingActivity = patientActivities.find((patientActivity) => {
+			console.log({
+			})
+			return (
+				patientActivity.id !== activityId &&
+				isIntervalOverlaid(
+					{ start: dayjs(patientActivity.startDatetime), end: dayjs(patientActivity.endDatetime) },
+					{ start: newActivityStart, end: newActivityEnd }
+				)
+			)
+		})
+		if (conflitingActivity) throw new HttpError(400, "Another activity is occcupying the same period.")
+
+		const newActivity = await prisma.activity.update({
+			where: {
+				id: activityId,
+			},
+			data: {
+				title: sanitizedTitle,
+				description: sanitizedDescription,
+				startDatetime: newActivityStart.toDate(),
+				endDatetime: newActivityEnd.toDate(),
+				Patient: {
+					connect: { id: activity.patientId },
+				},
+			},
+		})
+
+		return res.status(200).json(newActivity)
 	} catch (e) {
 		next(e)
 	}
