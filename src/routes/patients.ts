@@ -49,15 +49,7 @@ patientsRoutes.post("/", isAuth, isAdmin, async (req, res, next) => {
 			weaknesses,
 			weight,
 		} = req.body as PatientRequestBody
-		if (
-			!name ||
-			!birthdate ||
-			!severity ||
-			!bloodType ||
-			!contact ||
-			!height ||
-			!weight
-		) {
+		if (!name || !birthdate || !severity || !bloodType || !contact || !height || !weight) {
 			throw missingParamsError
 		}
 		const date = dayjs(birthdate, "YYYY-MM-DD").toDate()
@@ -117,15 +109,7 @@ patientsRoutes.post("/:patientId", isAuth, async (req, res, next) => {
 			weaknesses,
 			weight,
 		} = req.body as PatientRequestBody
-		if (
-			!name ||
-			!birthdate ||
-			!severity ||
-			!bloodType ||
-			!contact ||
-			!height ||
-			!weight
-		) {
+		if (!name || !birthdate || !severity || !bloodType || !contact || !height || !weight) {
 			throw missingParamsError
 		}
 		const date = dayjs(birthdate, "YYYY-MM-DD").toDate()
@@ -177,6 +161,17 @@ patientsRoutes.post("/:patientId", isAuth, async (req, res, next) => {
 	} catch (e) {
 		next(e)
 	}
+})
+
+patientsRoutes.delete("/:patientId", isAuth, isAdmin, async (req, res, next) => {
+	const { patientId } = req.params as { patientId: string }
+
+	const patient = await prisma.patient.findUnique({ where: { id: patientId } })
+	if (!patient) throw new HttpError(400, "Patient not found.")
+
+	await prisma.patient.delete({ where: { id: patientId } })
+
+	return res.status(204).json({})
 })
 
 patientsRoutes.get("/:patientId/caregivers", isAuth, isAdmin, async (req, res, next) => {
