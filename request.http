@@ -6,8 +6,8 @@ POST http://localhost:3000/user/auth
 Content-Type: application/json
 
 {
-    "username": "gustavo.siqueira1",
-    "password": "gustavo2005"
+    "username": "andrey.rodrigues1",
+    "password": "andrey2005"
 }
 
 
@@ -124,6 +124,12 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2NjY3NDM0N
 }
 
 
+### Delete patient
+DELETE http://localhost:3000/patients/cl9opioos0000baelif3vhsno
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2NjY1NTAxMDAsImV4cCI6MTY2Nzg0NjEwMCwiaXNzIjoiVGVjaENhcmUiLCJzdWIiOiJjbDlldzgwNmwwMDAwYmFiaW42bmF3Njd1In0.WlAcygJsrIwrcUQbjPuyQt2rvUIAVd2tdPKugn1WTdQ
+
+
 ### Get all patients from a caregiver
 GET http://localhost:3000/caregivers/cl9oo5njt0002bazbp7e7nu7e/patients
 Content-Type: application/json
@@ -158,4 +164,23 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2NjY4MzkzN
 ### Get all activities from a caregiver
 GET http://localhost:3000/activities/caregiver/cl9oo5gdl0000bazbnygijq0v
 Content-Type: application/json
-Authorization: Bearer
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2NjY5MTAwOTMsImV4cCI6MTY2ODIwNjA5MywiaXNzIjoiVGVjaENhcmUiLCJzdWIiOiJjbDlvbzVnZGwwMDAwYmF6Ym55Z2lqcTB2In0.QruIfBCF0tHfBy11QFcG6R3qqnr_WB_-P2xpEg-DCtM
+
+
+### Update activity
+POST http://localhost:3000/activities/cl9rnkah20000ba5wu12f0ggw
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2NjY5MTAwOTMsImV4cCI6MTY2ODIwNjA5MywiaXNzIjoiVGVjaENhcmUiLCJzdWIiOiJjbDlvbzVnZGwwMDAwYmF6Ym55Z2lqcTB2In0.QruIfBCF0tHfBy11QFcG6R3qqnr_WB_-P2xpEg-DCtM
+
+{
+    "title": "Parque 2",
+    "description": null,
+    "startDatetime": "2022-10-31 10:30",
+    "endDatetime": "2022-10-31 11:40"
+}
+
+
+### Delete activity
+DELETE  http://localhost:3000/activities/cl9rnkah20000ba5wu12f0ggw
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2NjY5MTAwOTMsImV4cCI6MTY2ODIwNjA5MywiaXNzIjoiVGVjaENhcmUiLCJzdWIiOiJjbDlvbzVnZGwwMDAwYmF6Ym55Z2lqcTB2In0.QruIfBCF0tHfBy11QFcG6R3qqnr_WB_-P2xpEg-DCtM
