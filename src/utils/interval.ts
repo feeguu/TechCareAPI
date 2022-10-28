@@ -25,8 +25,8 @@ export function isIntervalValid({ start, end }: Interval): boolean {
 export function isIntervalOverlaid(interval1: Interval, interval2: Interval): boolean {
 	return (
 		(interval1.start.isSameOrAfter(interval2.start) && interval1.start.isBefore(interval2.end)) ||
-		(interval2.end.isAfter(interval2.start) && interval2.end.isSameOrBefore(interval2.end)) ||
-		(interval1.start.isSameOrBefore(interval2.start) && interval2.end.isSameOrAfter(interval2.end))
+		(interval1.end.isAfter(interval2.start) && interval1.end.isSameOrBefore(interval2.end)) ||
+		(interval1.start.isSameOrBefore(interval2.start) && interval1.end.isSameOrAfter(interval2.end))
 	)
 }
 
