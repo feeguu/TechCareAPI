@@ -4,6 +4,7 @@ import customParserFormat from "dayjs/plugin/customParseFormat"
 import express from "express"
 import { HttpError } from "../errors/HttpError"
 import missingParamsError from "../errors/missingParamsError"
+import unauthorizedError from "../errors/unauthorizedError"
 import isAdmin from "../middlewares/isAdmin"
 import isAuth from "../middlewares/isAuth"
 
@@ -28,7 +29,15 @@ dayjs.extend(customParserFormat)
 
 patientsRoutes.get("/", isAuth, async (req, res, next) => {
 	try {
-		const patients = await prisma.patient.findMany()
+		const patients = await prisma.patient.findMany({ include: { care: true } })
+
+		if (res.locals.role === "CAREGIVER") {
+			const filteredPatients = patients.filter((patient) => {
+				return patient.care.find((care) => care.caregiverId === res.locals.id)
+			})
+			return res.status(200).json(filteredPatients)
+		}
+
 		return res.status(200).json(patients)
 	} catch (e) {
 		next(e)
@@ -76,19 +85,16 @@ patientsRoutes.post("/", isAuth, isAdmin, async (req, res, next) => {
 patientsRoutes.get("/:patientId", isAuth, async (req, res, next) => {
 	try {
 		const { patientId } = req.params as { patientId: string }
-		if (res.locals.role === "ADMIN") {
-			const patient = await prisma.patient.findUnique({ where: { id: patientId } })
-			if (!patient) throw new HttpError(400, "Patient not found.")
-			return res.status(200).send(patient)
-		}
-		if (res.locals.role === "CAREGIVER") {
-			const patients = await prisma.patient.findMany({
-				where: { id: patientId, care: { some: { caregiverId: res.locals.id } } },
-				take: 1,
-			})
-			if (patients.length === 0) throw new HttpError(400, "Patient not found.")
-			return res.status(200).send(patients[0])
-		}
+		const patient = await prisma.patient.findUnique({ where: { id: patientId }, include: { care: true } })
+		if (!patient) throw new HttpError(400, "Patient not found.")
+
+		if (
+			res.locals.role === "CAREGIVER" &&
+			!patient.care.some((care) => care.caregiverId === res.locals.id)
+		)
+			throw unauthorizedError
+
+		return res.status(200).send(patient)
 	} catch (e) {
 		next(e)
 	}
@@ -118,76 +124,58 @@ patientsRoutes.post("/:patientId", isAuth, async (req, res, next) => {
 			include: { care: true },
 		})
 		if (!patient) throw new HttpError(400, "Patient not found.")
-		if (res.locals.role === "ADMIN") {
-			const updatedPatient = await prisma.patient.update({
-				where: { id: patientId },
-				data: {
-					name,
-					birthdate: date,
-					severity,
-					bloodType,
-					allergies,
-					contact,
-					height,
-					medicines,
-					weaknesses,
-					weight,
-				},
-			})
-			return res.status(200).json(updatedPatient)
+		if (
+			res.locals.role === "CAREGIVER" &&
+			!patient.care.find((care) => care.caregiverId === res.locals.id)
+		) {
+			throw unauthorizedError
 		}
-		if (res.locals.role === "CAREGIVER") {
-			if (patient.care.find((care) => care.caregiverId === res.locals.id)) {
-				const updatedPatient = await prisma.patient.update({
-					where: { id: patientId },
-					data: {
-						name,
-						birthdate: date,
-						severity,
-						bloodType,
-						allergies,
-						contact,
-						height,
-						medicines,
-						weaknesses,
-						weight,
-					},
-				})
-				res.status(200).json(updatedPatient)
-			} else {
-				throw new HttpError(400, "Patient not found.")
-			}
-		}
+		const updatedPatient = await prisma.patient.update({
+			where: { id: patientId },
+			data: {
+				name,
+				birthdate: date,
+				severity,
+				bloodType,
+				allergies,
+				contact,
+				height,
+				medicines,
+				weaknesses,
+				weight,
+			},
+		})
+
+		return res.status(200).json(updatedPatient)
 	} catch (e) {
 		next(e)
 	}
 })
 
 patientsRoutes.delete("/:patientId", isAuth, isAdmin, async (req, res, next) => {
-	const { patientId } = req.params as { patientId: string }
+	try {
+		const { patientId } = req.params as { patientId: string }
 
-	const patient = await prisma.patient.findUnique({ where: { id: patientId } })
-	if (!patient) throw new HttpError(400, "Patient not found.")
+		const patient = await prisma.patient.findUnique({ where: { id: patientId } })
+		if (!patient) throw new HttpError(400, "Patient not found.")
 
-	await prisma.patient.delete({ where: { id: patientId } })
+		await prisma.patient.delete({ where: { id: patientId } })
 
-	return res.status(204).json({})
+		return res.status(204).json({})
+	} catch (e) {
+		next(e)
+	}
 })
 
 patientsRoutes.get("/:patientId/caregivers", isAuth, isAdmin, async (req, res, next) => {
 	try {
 		const { patientId } = req.params as { patientId: string }
-		const caregivers = await prisma.user.findMany({
-			where: { care: { some: { patientId } } },
-			select: {
-				id: true,
-				name: true,
-				role: true,
-				username: true,
-				contact: true,
-			},
+		const patient = await prisma.patient.findUnique({
+			where: { id: patientId },
+			include: { care: { include: { Caregiver: true } } },
 		})
-		res.status(200).json(caregivers)
+		if (!patient) throw new HttpError(400, "Patient not found")
+		return res.status(200).json(patient.care.map((care) => care.Caregiver))
 	} catch (e) {
 		next(e)
 	}
