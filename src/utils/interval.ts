@@ -36,9 +36,29 @@ export function isIntervalBetween(interval1: Interval, interval2: Interval): boo
 
 export function isActivityIntervalWithinCareInterval(
 	activity: Interval,
-	care: { start: Date; end: Date }
+	care: { start: string; end: string }
 ): boolean {
-	const careStart = activity.start.hour(dayjs(care.start).hour()).minute(dayjs(care.start).minute())
-	const careEnd = activity.end.hour(dayjs(care.end).hour()).minute(dayjs(care.end).minute())
+	const careStart = activity.start
+		.hour(dayjs(care.start, "HH:mm").hour())
+		.minute(dayjs(care.start, "HH:mm").minute())
+	const careEnd = activity.end
+		.hour(dayjs(care.end, "HH:mm").hour())
+		.minute(dayjs(care.end, "HH:mm").minute())
 	return isIntervalBetween({ start: careStart, end: careEnd }, activity)
+}
+
+export function isActivityOverlaidWithCareInterval(activity: Interval, care: { start: string; end: string }) {
+	const careStart = activity.start
+		.hour(dayjs(care.start, "HH:mm").hour())
+		.minute(dayjs(care.start, "HH:mm").minute())
+	const careEnd = activity.end
+		.hour(dayjs(care.end, "HH:mm").hour())
+		.minute(dayjs(care.end, "HH:mm").minute())
+	console.table([
+		{ activityStart: activity.start.toDate(), activityEnd: activity.end.toDate() },
+		{ careStart: careStart.toDate(), careEnd: careEnd.toDate() },
+	])
+	return (
+		isIntervalOverlaid(activity, { start: careStart, end: careEnd }) 
+	)
 }

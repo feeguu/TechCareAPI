@@ -18,6 +18,13 @@ CREATE TABLE `Patient` (
     `name` VARCHAR(191) NOT NULL,
     `birthdate` DATE NOT NULL,
     `severity` ENUM('SEVERE', 'MODERATE', 'LIGHT') NOT NULL DEFAULT 'LIGHT',
+    `bloodType` VARCHAR(191) NOT NULL,
+    `weight` DOUBLE NOT NULL,
+    `medicines` VARCHAR(191) NULL,
+    `allergies` VARCHAR(191) NULL,
+    `weaknesses` VARCHAR(191) NULL,
+    `contact` VARCHAR(191) NOT NULL,
+    `height` DOUBLE NOT NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -25,8 +32,9 @@ CREATE TABLE `Patient` (
 -- CreateTable
 CREATE TABLE `Care` (
     `id` VARCHAR(191) NOT NULL,
-    `startDatetime` DATETIME(3) NOT NULL,
-    `endDatetime` DATETIME(3) NOT NULL,
+    `startTime` VARCHAR(191) NOT NULL,
+    `endTime` VARCHAR(191) NOT NULL,
+    `weekday` INTEGER NOT NULL,
     `patientId` VARCHAR(191) NULL,
     `caregiverId` VARCHAR(191) NULL,
 
@@ -49,10 +57,10 @@ CREATE TABLE `MedicalRecord` (
 CREATE TABLE `Activity` (
     `id` VARCHAR(191) NOT NULL,
     `title` VARCHAR(191) NOT NULL,
-    `description` VARCHAR(191) NOT NULL,
+    `description` VARCHAR(191) NULL,
     `startDatetime` DATETIME(3) NOT NULL,
     `endDatetime` DATETIME(3) NOT NULL,
-    `patientId` VARCHAR(191) NULL,
+    `patientId` VARCHAR(191) NOT NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -70,4 +78,4 @@ ALTER TABLE `MedicalRecord` ADD CONSTRAINT `MedicalRecord_patientId_fkey` FOREIG
 ALTER TABLE `MedicalRecord` ADD CONSTRAINT `MedicalRecord_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Activity` ADD CONSTRAINT `Activity_patientId_fkey` FOREIGN KEY (`patientId`) REFERENCES `Patient`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE `Activity` ADD CONSTRAINT `Activity_patientId_fkey` FOREIGN KEY (`patientId`) REFERENCES `Patient`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;

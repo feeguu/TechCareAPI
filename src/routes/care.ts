@@ -1,11 +1,10 @@
 import { Care, PrismaClient } from "@prisma/client"
 import dayjs from "dayjs"
+import customParseFormat from "dayjs/plugin/customParseFormat"
 import express from "express"
 import { HttpError } from "../errors/HttpError"
 import missingParamsError from "../errors/missingParamsError"
-import isAdmin from "../middlewares/isAdmin"
-import isAuth from "../middlewares/isAuth"
-import { isIntervalOverlaid, isIntervalValid } from "../utils/interval"
+import { isIntervalOverlaid } from "../utils/interval"
 import activitiesRoutes from "./activities"
 
 type Ids = {
@@ -13,112 +12,125 @@ type Ids = {
 	caregiverId: string
 }
 
+// dayjs.extend(utc)
+// dayjs.extend(timezone)
+dayjs.extend(customParseFormat)
+
 const prisma = new PrismaClient()
 
 const caresRoute = express.Router()
 
 //Get all cares passing the caregiverId and patientId
-caresRoute.get("/", isAuth, isAdmin, async (req, res, next) => {
-	const { patientId, caregiverId } = req.body as Ids
-	const cares = await prisma.care.findMany({ where: { patientId, caregiverId } })
-	return res.status(200).json(cares)
+caresRoute.get("/", async (req, res, next) => {
+	try {
+		const { patientId, caregiverId } = req.body as Ids
+
+		const patient = await prisma.patient.findUnique({ where: { id: patientId } })
+		if (!patient) throw new HttpError(400, "Patient not found.")
+		const caregiver = await prisma.user.findUnique({ where: { id: caregiverId } })
+		if (caregiver?.role !== "CAREGIVER") throw new HttpError(400, "Caregiver not found.")
+
+		const cares = await prisma.care.findMany({ where: { patientId, caregiverId } })
+		return res.status(200).json(cares)
+	} catch (e) {
+		next(e)
+	}
 })
 
-caresRoute.post("/", isAuth, isAdmin, async (req, res, next) => {
+caresRoute.post("/", async (req, res, next) => {
 	try {
 		const { patientId, caregiverId, startTime, endTime, weekday } = req.body as Care
+
 		if (!patientId || !caregiverId || !startTime || !endTime || !weekday) throw missingParamsError
 
-		const newCareInterval = { start: dayjs(startTime), end: dayjs(endTime) }
-		if (!isIntervalValid(newCareInterval)) throw new HttpError(400, "Start or end date is invalid.")
+		if (
+			!startTime.match(/^(0[0-9]|1[0-9]|2[0-4]):[0-5][0-9]/g) ||
+			!endTime.match(/^(0[0-9]|1[0-9]|2[0-4]):[0-5][0-9]/g)
+		)
+			throw new HttpError(400, "Start or date is invalid")
+
+		const start = dayjs(startTime, "HH:mm")
+		const end = dayjs(endTime, "HH:mm")
+		if (weekday < 0 || weekday > 6) throw new HttpError(400, "Weekday is invalid.")
+
+		if (!start.isValid() || !end.isValid || start.isAfter(end))
+			throw new HttpError(400, "Start or end date is invalid.")
 
 		if (!(await prisma.patient.findUnique({ where: { id: patientId } })))
 			throw new HttpError(400, "Patient not found.")
 		if ((await prisma.user.findUnique({ where: { id: caregiverId } }))?.role !== "CAREGIVER")
 			throw new HttpError(400, "Caregiver not found.")
 
-		const patientCares = await prisma.care.findMany({ where: { patientId } })
-		const conflitingPatientCare = patientCares.some((patientCare) => {
-			const patientCareInterval = {
-				start: dayjs(patientCare.startTime),
-				end: dayjs(patientCare.endTime),
-			}
-			return isIntervalOverlaid(newCareInterval, patientCareInterval)
+		const weekdayCares = await prisma.care.findMany({ where: { weekday } })
+		const hasConflictingCare = weekdayCares.some((care) => {
+			return (
+				(patientId === care.patientId || caregiverId === care.caregiverId) &&
+				isIntervalOverlaid(
+					{ start, end },
+					{ start: dayjs(care.startTime, "HH:mm"), end: dayjs(care.endTime, "HH:mm") }
+				)
+			)
 		})
-		if (conflitingPatientCare)
-			throw new HttpError(400, "Another patient care is occcupying the same period.")
-
-		const caregiverCares = await prisma.care.findMany({ where: { caregiverId } })
-		const conflitingCaregiverCare = caregiverCares.some((caregiverCare) => {
-			const caregiverCareInterval = {
-				start: dayjs(caregiverCare.startTime),
-				end: dayjs(caregiverCare.endTime),
-			}
-			return isIntervalOverlaid(newCareInterval, caregiverCareInterval)
-		})
-		if (conflitingCaregiverCare)
-			throw new HttpError(400, "Another caregiver care is occcupying the same period.")
+		if (hasConflictingCare) throw new HttpError(400, "Another care is occupying the same period.")
 
 		const care = await prisma.care.create({
 			data: {
-				Caregiver: { connect: { id: caregiverId } },
-				Patient: { connect: { id: patientId } },
-				startTime: newCareInterval.start.toDate(),
-				endTime: newCareInterval.end.toDate(),
+				patientId,
+				caregiverId,
+				startTime,
+				endTime,
 				weekday,
 			},
 		})
+
 		return res.status(200).json(care)
 	} catch (e) {
 		next(e)
 	}
 })
 
-caresRoute.post("/:careId", isAuth, isAdmin, async (req, res, next) => {
+caresRoute.post("/:careId", async (req, res, next) => {
 	try {
 		const { careId } = req.params as { careId: string }
 
 		const care = await prisma.care.findUnique({ where: { id: careId } })
-		if (!care) throw new HttpError(400, "Error not found.")
+		if (!care) throw new HttpError(400, "Care not found.")
+
 		const { patientId, caregiverId, startTime, endTime, weekday } = req.body as Care
 		if (!patientId || !caregiverId || !startTime || !endTime || !weekday) throw missingParamsError
 
-		const newCareInterval = { start: dayjs(startTime), end: dayjs(endTime) }
-		if (!isIntervalValid(newCareInterval)) throw new HttpError(400, "Start or end date is invalid.")
+		const start = dayjs(startTime, "HH:mm")
+		const end = dayjs(endTime, "HH:mm")
+
+		if (weekday < 0 || weekday > 6) throw new HttpError(400, "Weekday is invalid.")
+
+		if (!start.isValid() || !end.isValid || start.isAfter(end))
+			throw new HttpError(400, "Start or end date is invalid.")
 
 		if (!(await prisma.patient.findUnique({ where: { id: patientId } })))
 			throw new HttpError(400, "Patient not found.")
 		if ((await prisma.user.findUnique({ where: { id: caregiverId } }))?.role !== "CAREGIVER")
 			throw new HttpError(400, "Caregiver not found.")
 
-		const patientCares = await prisma.care.findMany({ where: { patientId } })
-		const conflitingPatientCare = patientCares.some((patientCare) => {
-			const patientCareInterval = {
-				start: dayjs(patientCare.startTime),
-				end: dayjs(patientCare.endTime),
-			}
-			return isIntervalOverlaid(newCareInterval, patientCareInterval)
+		const weekdayCares = await prisma.care.findMany({ where: { weekday } })
+		const hasConflictingCare = weekdayCares.some((care) => {
+			return (
+				(patientId === care.patientId || caregiverId === care.caregiverId) &&
+				isIntervalOverlaid(
+					{ start, end },
+					{ start: dayjs(care.startTime, "HH:mm"), end: dayjs(care.endTime, "HH:mm") }
+				)
+			)
 		})
-		if (conflitingPatientCare)
-			throw new HttpError(400, "Another patient care is occcupying the same period.")
+		if (hasConflictingCare) throw new HttpError(400, "Another care is occupying the same period.")
 
-		const caregiverCares = await prisma.care.findMany({ where: { caregiverId } })
-		const conflitingCaregiverCare = caregiverCares.some((caregiverCare) => {
-			const caregiverCareInterval = {
-				start: dayjs(caregiverCare.startTime),
-				end: dayjs(caregiverCare.endTime),
-			}
-			return isIntervalOverlaid(newCareInterval, caregiverCareInterval)
-		})
-		if (conflitingCaregiverCare)
-			throw new HttpError(400, "Another caregiver care is occcupying the same period.")
 		const newCare = await prisma.care.update({
 			where: { id: careId },
 			data: {
 				Caregiver: { connect: { id: caregiverId } },
 				Patient: { connect: { id: patientId } },
-				startTime: newCareInterval.start.toDate(),
-				endTime: newCareInterval.end.toDate(),
+				startTime,
+				endTime,
 				weekday,
 			},
 		})
@@ -128,7 +140,7 @@ caresRoute.post("/:careId", isAuth, isAdmin, async (req, res, next) => {
 	}
 })
 
-activitiesRoutes.delete("/:careId", isAuth, isAdmin, async (req, res, next) => {
+caresRoute.delete("/:careId", async (req, res, next) => {
 	try {
 		const { careId } = req.params as { careId: string }
 		const care = await prisma.care.findUnique({ where: { id: careId } })

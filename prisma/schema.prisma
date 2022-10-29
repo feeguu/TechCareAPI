@@ -43,8 +43,8 @@ model Patient {
 
 model Care {
   id        String   @id @default(cuid())
-  startTime DateTime @db.Time()
-  endTime   DateTime @db.Time()
+  startTime String
+  endTime   String
   weekday   Int
 
   Patient     Patient? @relation(fields: [patientId], references: [id])

@@ -6,7 +6,12 @@ import missingParamsError from "../errors/missingParamsError"
 import isAuth from "../middlewares/isAuth"
 import customParseFormat from "dayjs/plugin/customParseFormat"
 import unauthorizedError from "../errors/unauthorizedError"
-import { isActivityIntervalWithinCareInterval, isIntervalOverlaid, isIntervalValid } from "../utils/interval"
+import {
+	isActivityIntervalWithinCareInterval,
+	isActivityOverlaidWithCareInterval,
+	isIntervalOverlaid,
+	isIntervalValid,
+} from "../utils/interval"
 
 type ActivityRequestBody = {
 	title: string
@@ -77,11 +82,12 @@ activitiesRoutes.post("/patient/:patientId", async (req, res, next) => {
 			})
 			if (cares.length === 0) throw unauthorizedError
 			const validCare = cares.find((care) => {
-				isActivityIntervalWithinCareInterval(
+				return isActivityIntervalWithinCareInterval(
 					{ start: activityStart, end: activityEnd },
 					{ start: care.startTime, end: care.endTime }
 				)
 			})
+			console.table({activityDay: activityStart.day(), careDay: validCare?.weekday})
 			if (!validCare) throw new HttpError(400, "Activity time is outside the care period.")
 		}
 
@@ -103,7 +109,7 @@ activitiesRoutes.post("/patient/:patientId", async (req, res, next) => {
 				activities: true,
 			},
 		})
-		return res.status(200).json(patient)
+		return res.status(200).json(patient.activities)
 	} catch (e) {
 		next(e)
 	}
@@ -123,11 +129,9 @@ activitiesRoutes.get("/caregiver/:caregiverId", async (req, res, next) => {
 			const activityStart = dayjs(activity.startDatetime)
 			const activityEnd = dayjs(activity.endDatetime)
 			const validCare = activity.Patient.care.find((care) => {
-				return (
-					isActivityIntervalWithinCareInterval(
-						{ start: activityStart, end: activityEnd },
-						{ start: care.startTime, end: care.endTime }
-					) && activityStart.day() === care.weekday
+				return isActivityOverlaidWithCareInterval(
+					{ start: activityStart, end: activityEnd },
+					{ start: care.startTime, end: care.endTime }
 				)
 			})
 			return validCare
@@ -189,7 +193,6 @@ activitiesRoutes.post("/:activityId", async (req, res, next) => {
 
 		const patientActivities = await prisma.activity.findMany({ where: { patientId: activity.patientId } })
 		const conflitingActivity = patientActivities.find((patientActivity) => {
-			console.log({})
 			return (
 				patientActivity.id !== activityId &&
 				isIntervalOverlaid(
