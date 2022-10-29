@@ -1,5 +1,5 @@
 import dayjs, { Dayjs } from "dayjs"
-import customParserFormat from "dayjs/plugin/customParseFormat"
+import customParseFormat from "dayjs/plugin/customParseFormat"
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore"
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter"
 
@@ -10,7 +10,7 @@ type Interval = {
 
 dayjs.extend(isSameOrBefore)
 dayjs.extend(isSameOrAfter)
-dayjs.extend(customParserFormat)
+dayjs.extend(customParseFormat)
 
 export function isIntervalValid({ start, end }: Interval): boolean {
 	return (

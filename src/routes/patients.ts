@@ -1,6 +1,6 @@
 import { PrismaClient, Severity } from "@prisma/client"
 import dayjs from "dayjs"
-import customParserFormat from "dayjs/plugin/customParseFormat"
+import customParseFormat from "dayjs/plugin/customParseFormat"
 import express from "express"
 import { HttpError } from "../errors/HttpError"
 import missingParamsError from "../errors/missingParamsError"
@@ -25,7 +25,7 @@ const prisma = new PrismaClient()
 
 const patientsRoutes = express.Router()
 
-dayjs.extend(customParserFormat)
+dayjs.extend(customParseFormat)
 
 patientsRoutes.get("/", isAuth, async (req, res, next) => {
 	try {

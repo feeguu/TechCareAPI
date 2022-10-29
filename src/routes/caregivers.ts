@@ -1,7 +1,7 @@
 import { PrismaClient, Role, User } from "@prisma/client"
 import { hash } from "argon2"
 import dayjs from "dayjs"
-import customParserFormat from "dayjs/plugin/customParseFormat"
+import customParseFormat from "dayjs/plugin/customParseFormat"
 import express from "express"
 import { HttpError } from "../errors/HttpError"
 import missingParamsError from "../errors/missingParamsError"
@@ -13,7 +13,7 @@ const prisma = new PrismaClient()
 
 const caregiversRoute = express.Router()
 
-dayjs.extend(customParserFormat)
+dayjs.extend(customParseFormat)
 
 type CaregiverRequestBody = {
 	name: string

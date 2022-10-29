@@ -5,16 +5,18 @@ import { HttpError } from "./errors/HttpError"
 import patientsRoutes from "./routes/patients"
 import activitiesRoutes from "./routes/activities"
 import caresRoute from "./routes/care"
+import isAdmin from "./middlewares/isAdmin"
+import isAuth from "./middlewares/isAuth"
 
 const app = express()
 
 app.use(express.json())
 
 app.use("/user", userRoutes)
-app.use("/caregivers", caregiversRoute)
-app.use("/patients", patientsRoutes)
-app.use("/activities", activitiesRoutes)
-app.use("/cares", caresRoute)
+app.use("/caregivers", isAuth, caregiversRoute)
+app.use("/patients", isAuth, patientsRoutes)
+app.use("/activities", isAuth, activitiesRoutes)
+app.use("/cares", isAuth, isAdmin, caresRoute)
 
 const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
 	if (err instanceof HttpError) {

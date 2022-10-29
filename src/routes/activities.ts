@@ -4,7 +4,7 @@ import express from "express"
 import { HttpError } from "../errors/HttpError"
 import missingParamsError from "../errors/missingParamsError"
 import isAuth from "../middlewares/isAuth"
-import customParserFormat from "dayjs/plugin/customParseFormat"
+import customParseFormat from "dayjs/plugin/customParseFormat"
 import unauthorizedError from "../errors/unauthorizedError"
 import { isActivityIntervalWithinCareInterval, isIntervalOverlaid, isIntervalValid } from "../utils/interval"
 
@@ -15,13 +15,13 @@ type ActivityRequestBody = {
 	endDatetime: string
 }
 
-dayjs.extend(customParserFormat)
+dayjs.extend(customParseFormat)
 
 const prisma = new PrismaClient()
 
 const activitiesRoutes = express.Router()
 
-activitiesRoutes.get("/patient/:patientId", isAuth, async (req, res, next) => {
+activitiesRoutes.get("/patient/:patientId", async (req, res, next) => {
 	try {
 		const { patientId } = req.params as { patientId: string }
 		const activities = await prisma.activity.findMany({
@@ -46,7 +46,7 @@ activitiesRoutes.get("/patient/:patientId", isAuth, async (req, res, next) => {
 	}
 })
 
-activitiesRoutes.post("/patient/:patientId", isAuth, async (req, res, next) => {
+activitiesRoutes.post("/patient/:patientId", async (req, res, next) => {
 	try {
 		const { patientId } = req.params as { patientId: string }
 		const { title, description, startDatetime, endDatetime } = req.body as ActivityRequestBody
@@ -109,7 +109,7 @@ activitiesRoutes.post("/patient/:patientId", isAuth, async (req, res, next) => {
 	}
 })
 
-activitiesRoutes.get("/caregiver/:caregiverId", isAuth, async (req, res, next) => {
+activitiesRoutes.get("/caregiver/:caregiverId", async (req, res, next) => {
 	try {
 		const { caregiverId } = req.params as { caregiverId: string }
 		if (res.locals.role === "CAREGIVER" && res.locals.id !== caregiverId) {
@@ -138,7 +138,7 @@ activitiesRoutes.get("/caregiver/:caregiverId", isAuth, async (req, res, next) =
 	}
 })
 
-activitiesRoutes.post("/:activityId", isAuth, async (req, res, next) => {
+activitiesRoutes.post("/:activityId", async (req, res, next) => {
 	try {
 		const { activityId } = req.params as { activityId: string }
 		const { title, description, startDatetime, endDatetime } = req.body as ActivityRequestBody
@@ -221,7 +221,7 @@ activitiesRoutes.post("/:activityId", isAuth, async (req, res, next) => {
 	}
 })
 
-activitiesRoutes.delete("/:activityId", isAuth, async (req, res, next) => {
+activitiesRoutes.delete("/:activityId", async (req, res, next) => {
 	try {
 		const { activityId } = req.params as { activityId: string }
 		const activity = await prisma.activity.findUnique({
@@ -251,7 +251,7 @@ activitiesRoutes.delete("/:activityId", isAuth, async (req, res, next) => {
 		}
 
 		await prisma.activity.delete({ where: { id: activityId } })
-		
+
 		return res.status(204).json({})
 	} catch (e) {
 		next(e)
