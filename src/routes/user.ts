@@ -74,7 +74,7 @@ userRoutes.post("/change-password", isAuth, async (req, res, next) => {
 
 		if (!oldPassword || !newPassword) throw missingParamsError
 
-		if (newPassword.length <= 8) throw new HttpError(403, "Password must be at least 8 characters long.")
+		if (newPassword.length < 8) throw new HttpError(403, "Password must be at least 8 characters long.")
 
 		const user = await prisma.user.findUnique({
 			where: { id: userId },
