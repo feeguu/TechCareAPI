@@ -15,19 +15,15 @@ const caregiversRoute = express.Router()
 
 dayjs.extend(customParserFormat)
 
-type CreateCaregiverRequestBody = {
+type CaregiverRequestBody = {
 	name: string
 	birthdate: string
 	contact: string
 }
 
-type UpdateCaregiverRequestBody = CreateCaregiverRequestBody & {
-	role: Role
-}
-
 caregiversRoute.post("/", isAuth, isAdmin, async (req, res, next) => {
 	try {
-		const { name, birthdate, contact } = req.body as CreateCaregiverRequestBody
+		const { name, birthdate, contact } = req.body as CaregiverRequestBody
 
 		if (!name || !birthdate || !contact) throw missingParamsError
 
@@ -43,7 +39,8 @@ caregiversRoute.post("/", isAuth, isAdmin, async (req, res, next) => {
 		const firstName = splittedName[0].toLowerCase()
 		const lastName = splittedName[splittedName.length - 1].toLowerCase()
 		const parsedBirthdate = dayjs(birthdate, "YYYY-MM-DD")
-
+		if (!parsedBirthdate.isValid() || !parsedBirthdate.isBefore(dayjs()))
+			throw new HttpError(400, "Birthdate is invalid.")
 		const birthYear = parsedBirthdate.year()
 
 		const username = `${firstName}.${lastName}`
@@ -67,6 +64,7 @@ caregiversRoute.post("/", isAuth, isAdmin, async (req, res, next) => {
 				name: true,
 				role: true,
 				username: true,
+				birthdate: true,
 				contact: true,
 			},
 		})
@@ -86,8 +84,8 @@ caregiversRoute.get("/", isAuth, isAdmin, async (req, res, next) => {
 				name: true,
 				role: true,
 				username: true,
-				contact: true,
 				birthdate: true,
+				contact: true,
 			},
 		})
 
@@ -113,6 +111,7 @@ caregiversRoute.get("/:caregiverId", isAuth, async (req, res, next) => {
 				name: true,
 				role: true,
 				username: true,
+				birthdate: true,
 				contact: true,
 			},
 		})
@@ -125,28 +124,35 @@ caregiversRoute.get("/:caregiverId", isAuth, async (req, res, next) => {
 	}
 })
 
-caregiversRoute.post("/:caregiverId", isAuth, isAdmin, async (req, res, next) => {
+caregiversRoute.post("/:caregiverId", isAuth, async (req, res, next) => {
 	try {
-		const { name, birthdate, contact, role } = req.body as UpdateCaregiverRequestBody
+		const { name, birthdate, contact } = req.body as CaregiverRequestBody
 
 		if (!name || !birthdate || !contact) throw missingParamsError
 
 		const { caregiverId } = req.params as { caregiverId: string }
+
+		if (res.locals.role === "CAREGIVER" && caregiverId !== res.locals.id) throw unauthorizedError
+
 		const user = await prisma.user.findUnique({ where: { id: caregiverId } })
 
 		if (!user || user.role !== "CAREGIVER") throw new HttpError(400, "Caregiver not found.")
 
 		let sanitizedName = name.trim().replace(/\s{2,}/g, " ")
-		const date = dayjs(birthdate, "YYYY-MM-DD").toDate()
+		const parsedBirthdate = dayjs(birthdate, "YYYY-MM-DD")
+		const date = parsedBirthdate.toDate()
+		if (!parsedBirthdate.isValid() || !parsedBirthdate.isBefore(dayjs()))
+			throw new HttpError(400, "Birthdate is invalid.")
 
 		const caregiver = await prisma.user.update({
 			where: { id: caregiverId },
-			data: { name: sanitizedName, birthdate: date, contact: contact, role },
+			data: { name: sanitizedName, birthdate: date, contact: contact },
 			select: {
 				id: true,
 				name: true,
 				role: true,
 				username: true,
+				birthdate: true,
 				contact: true,
 			},
 		})
