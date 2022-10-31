@@ -61,6 +61,9 @@ patientsRoutes.post("/", isAuth, isAdmin, async (req, res, next) => {
 		if (!name || !birthdate || !severity || !bloodType || !contact || !height || !weight) {
 			throw missingParamsError
 		}
+		if (severity != "SEVERE" && severity != "LIGHT" && severity != "MODERATE") {
+			throw new HttpError(400, "Severity is invalid.")
+		}
 		const date = dayjs(birthdate, "YYYY-MM-DD").toDate()
 		const patient = await prisma.patient.create({
 			data: {
@@ -117,6 +120,9 @@ patientsRoutes.post("/:patientId", isAuth, async (req, res, next) => {
 		} = req.body as PatientRequestBody
 		if (!name || !birthdate || !severity || !bloodType || !contact || !height || !weight) {
 			throw missingParamsError
+		}
+		if (severity != "SEVERE" && severity != "LIGHT" && severity != "MODERATE") {
+			throw new HttpError(400, "Severity is invalid.")
 		}
 		const date = dayjs(birthdate, "YYYY-MM-DD").toDate()
 		const patient = await prisma.patient.findUnique({

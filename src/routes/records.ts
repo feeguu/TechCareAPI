@@ -1,5 +1,18 @@
-import { PrismaClient } from "@prisma/client"
+import { PrismaClient, Severity } from "@prisma/client"
+import dayjs from "dayjs"
+import customParseFormat from "dayjs/plugin/customParseFormat"
 import express from "express"
+import { HttpError } from "../errors/HttpError"
+import missingParamsError from "../errors/missingParamsError"
+import unauthorizedError from "../errors/unauthorizedError"
+
+type RecordRequestBody = {
+	date: string
+	severity: Severity
+	description: string
+}
+
+dayjs.extend(customParseFormat)
 
 const prisma = new PrismaClient()
 
@@ -8,16 +21,60 @@ const recordsRoutes = express.Router()
 recordsRoutes.get("/patients/:patientId", async (req, res, next) => {
 	try {
 		const { patientId } = req.params as { patientId: string }
-		const records = await prisma.medicalRecord.findMany({ where: { patientId } })
-
-		if (res.locals.role === "CAREGIVER") {
-			const filteredRecords = records.filter((record) => {
-				return record.userId === res.locals.id
-			})
-            return res.status(200).json(filteredRecords)
+		const patient = await prisma.patient.findUnique({
+			where: { id: patientId },
+			include: { medicalRecords: true, care: true },
+		})
+		if (!patient) throw new HttpError(400, "Patient not found.")
+		if (
+			res.locals.role === "CAREGIVER" &&
+			!patient.care.some((care) => care.caregiverId === res.locals.id)
+		) {
+			throw unauthorizedError
 		}
 
-		return res.status(200).json(records)
+		return res.status(200).json(patient.medicalRecords)
+	} catch (e) {
+		next(e)
+	}
+})
+
+recordsRoutes.post("/patients/:patientId", async (req, res, next) => {
+	try {
+		const { patientId } = req.params as { patientId: string }
+		const { date, severity, description } = req.body as RecordRequestBody
+
+		const patient = await prisma.patient.findUnique({ where: { id: patientId }, include: { care: true } })
+		if (!patient) throw new HttpError(400, "Patient not found.")
+
+		if (!date || !severity || !description) throw missingParamsError
+
+		const parsedDate = dayjs(date, "YYYY-MM-DD")
+
+		const sanitizedDescription = description.trim().replace(/\s{2,}/g, " ")
+
+		if (severity != "SEVERE" && severity != "LIGHT" && severity != "MODERATE") {
+			throw new HttpError(400, "Severity is invalid.")
+		}
+
+		if (
+			res.locals.role === "CAREGIVER" &&
+			!patient.care.some((care) => care.caregiverId === res.locals.id)
+		) {
+			throw unauthorizedError
+		}
+
+		const record = await prisma.medicalRecord.create({
+			data: {
+				date: parsedDate.toDate(),
+				userId: res.locals.id,
+				description: sanitizedDescription,
+				severity,
+				patientId,
+			},
+		})
+
+		return res.status(200).json(record)
 	} catch (e) {
 		next(e)
 	}
