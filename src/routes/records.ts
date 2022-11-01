@@ -5,6 +5,7 @@ import express from "express"
 import { HttpError } from "../errors/HttpError"
 import missingParamsError from "../errors/missingParamsError"
 import unauthorizedError from "../errors/unauthorizedError"
+import isAdmin from "../middlewares/isAdmin"
 
 type RecordRequestBody = {
 	date: string
@@ -108,6 +109,19 @@ recordsRoutes.post("/:recordId", async (req, res, next) => {
 		})
 
 		return res.status(200).json(newRecord)
+	} catch (e) {
+		next(e)
+	}
+})
+
+recordsRoutes.delete("/:recordId", isAdmin, async (req, res, next) => {
+	try {
+		const { recordId } = req.params as { recordId: string }
+		const record = await prisma.medicalRecord.findUnique({ where: { id: recordId } })
+		if (!record) throw new HttpError(400, "Medical record not found.")
+
+		await prisma.medicalRecord.delete({ where: { id: recordId } })
+		return res.status(200).json({})
 	} catch (e) {
 		next(e)
 	}
