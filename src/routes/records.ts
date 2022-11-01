@@ -80,4 +80,37 @@ recordsRoutes.post("/patients/:patientId", async (req, res, next) => {
 	}
 })
 
+recordsRoutes.post("/:recordId", async (req, res, next) => {
+	try {
+		const { recordId } = req.params as { recordId: string }
+		const record = await prisma.medicalRecord.findUnique({ where: { id: recordId } })
+		if (!record) throw new HttpError(400, "Medical record not found.")
+
+		const { date, severity, description } = req.body as RecordRequestBody
+
+		if (!date || !severity || !description) throw missingParamsError
+
+		const parsedDate = dayjs(date, "YYYY-MM-DD")
+
+		const sanitizedDescription = description.trim().replace(/\s{2,}/g, " ")
+
+		if (severity != "SEVERE" && severity != "LIGHT" && severity != "MODERATE") {
+			throw new HttpError(400, "Severity is invalid.")
+		}
+
+		const newRecord = await prisma.medicalRecord.update({
+			where: { id: recordId },
+			data: {
+				date: parsedDate.toDate(),
+				description: sanitizedDescription,
+				severity,
+			},
+		})
+
+		return res.status(200).json(newRecord)
+	} catch (e) {
+		next(e)
+	}
+})
+
 export default recordsRoutes
