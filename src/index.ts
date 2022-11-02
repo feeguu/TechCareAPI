@@ -10,7 +10,7 @@ import isAuth from "./middlewares/isAuth"
 
 const app = express()
 
-app.use(express.json())
+app.use(express.json({limit: "4mb"}))
 
 app.use("/user", userRoutes)
 app.use("/caregivers", isAuth, caregiversRoute)

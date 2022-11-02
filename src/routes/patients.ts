@@ -7,6 +7,7 @@ import missingParamsError from "../errors/missingParamsError"
 import unauthorizedError from "../errors/unauthorizedError"
 import isAdmin from "../middlewares/isAdmin"
 import isAuth from "../middlewares/isAuth"
+import uploadImage from "../utils/uploadImage"
 
 type PatientRequestBody = {
 	name: string
@@ -27,7 +28,7 @@ const patientsRoutes = express.Router()
 
 dayjs.extend(customParseFormat)
 
-patientsRoutes.get("/", isAuth, async (req, res, next) => {
+patientsRoutes.get("/", async (req, res, next) => {
 	try {
 		const patients = await prisma.patient.findMany({ include: { care: true } })
 
@@ -44,7 +45,7 @@ patientsRoutes.get("/", isAuth, async (req, res, next) => {
 	}
 })
 
-patientsRoutes.post("/", isAuth, isAdmin, async (req, res, next) => {
+patientsRoutes.post("/", isAdmin, async (req, res, next) => {
 	try {
 		const {
 			name,
@@ -85,7 +86,7 @@ patientsRoutes.post("/", isAuth, isAdmin, async (req, res, next) => {
 	}
 })
 
-patientsRoutes.get("/:patientId", isAuth, async (req, res, next) => {
+patientsRoutes.get("/:patientId", async (req, res, next) => {
 	try {
 		const { patientId } = req.params as { patientId: string }
 		const patient = await prisma.patient.findUnique({ where: { id: patientId }, include: { care: true } })
@@ -103,7 +104,7 @@ patientsRoutes.get("/:patientId", isAuth, async (req, res, next) => {
 	}
 })
 
-patientsRoutes.post("/:patientId", isAuth, async (req, res, next) => {
+patientsRoutes.post("/:patientId", async (req, res, next) => {
 	try {
 		const { patientId } = req.params as { patientId: string }
 		const {
@@ -158,7 +159,7 @@ patientsRoutes.post("/:patientId", isAuth, async (req, res, next) => {
 	}
 })
 
-patientsRoutes.delete("/:patientId", isAuth, isAdmin, async (req, res, next) => {
+patientsRoutes.delete("/:patientId", isAdmin, async (req, res, next) => {
 	try {
 		const { patientId } = req.params as { patientId: string }
 
@@ -173,7 +174,7 @@ patientsRoutes.delete("/:patientId", isAuth, isAdmin, async (req, res, next) => 
 	}
 })
 
-patientsRoutes.get("/:patientId/caregivers", isAuth, isAdmin, async (req, res, next) => {
+patientsRoutes.get("/:patientId/caregivers", isAdmin, async (req, res, next) => {
 	try {
 		const { patientId } = req.params as { patientId: string }
 		const patient = await prisma.patient.findUnique({
@@ -182,6 +183,25 @@ patientsRoutes.get("/:patientId/caregivers", isAuth, isAdmin, async (req, res, n
 		})
 		if (!patient) throw new HttpError(400, "Patient not found")
 		return res.status(200).json(patient.care.map((care) => care.Caregiver))
+	} catch (e) {
+		next(e)
+	}
+})
+
+patientsRoutes.post("/:patientId/change-photo", isAdmin, async (req, res, next) => {
+	try {
+		const { image } = req.body as { image: string }
+		const { patientId } = req.params as { patientId: string }
+		const patient = await prisma.patient.findUnique({ where: { id: patientId }, include: { care: true } })
+		if (!patient) throw new HttpError(400, "Patient not found.")
+		const imageUrl = await uploadImage(image, patientId, "patient")
+		const newPatient = await prisma.patient.update({
+			where: { id: patientId },
+			data: {
+				imageUrl,
+			},
+		})
+		return res.status(200).json(newPatient)
 	} catch (e) {
 		next(e)
 	}

@@ -7,7 +7,7 @@ import { HttpError } from "../errors/HttpError"
 import missingParamsError from "../errors/missingParamsError"
 import unauthorizedError from "../errors/unauthorizedError"
 import isAdmin from "../middlewares/isAdmin"
-import isAuth from "../middlewares/isAuth"
+import uploadImage from "../utils/uploadImage"
 
 const prisma = new PrismaClient()
 
@@ -21,7 +21,7 @@ type CaregiverRequestBody = {
 	contact: string
 }
 
-caregiversRoute.post("/", isAuth, isAdmin, async (req, res, next) => {
+caregiversRoute.post("/", isAdmin, async (req, res, next) => {
 	try {
 		const { name, birthdate, contact } = req.body as CaregiverRequestBody
 
@@ -75,7 +75,7 @@ caregiversRoute.post("/", isAuth, isAdmin, async (req, res, next) => {
 	}
 })
 
-caregiversRoute.get("/", isAuth, isAdmin, async (req, res, next) => {
+caregiversRoute.get("/", isAdmin, async (req, res, next) => {
 	try {
 		const caregivers = await prisma.user.findMany({
 			where: { role: { equals: "CAREGIVER" } },
@@ -86,6 +86,7 @@ caregiversRoute.get("/", isAuth, isAdmin, async (req, res, next) => {
 				username: true,
 				birthdate: true,
 				contact: true,
+				imageUrl: true,
 			},
 		})
 
@@ -95,7 +96,7 @@ caregiversRoute.get("/", isAuth, isAdmin, async (req, res, next) => {
 	}
 })
 
-caregiversRoute.get("/:caregiverId", isAuth, async (req, res, next) => {
+caregiversRoute.get("/:caregiverId", async (req, res, next) => {
 	try {
 		const { caregiverId } = req.params as { caregiverId: string }
 		const userReqId = res.locals.id
@@ -113,6 +114,7 @@ caregiversRoute.get("/:caregiverId", isAuth, async (req, res, next) => {
 				username: true,
 				birthdate: true,
 				contact: true,
+				imageUrl: true,
 			},
 		})
 
@@ -124,7 +126,7 @@ caregiversRoute.get("/:caregiverId", isAuth, async (req, res, next) => {
 	}
 })
 
-caregiversRoute.post("/:caregiverId", isAuth, async (req, res, next) => {
+caregiversRoute.post("/:caregiverId", async (req, res, next) => {
 	try {
 		const { name, birthdate, contact } = req.body as CaregiverRequestBody
 
@@ -154,6 +156,7 @@ caregiversRoute.post("/:caregiverId", isAuth, async (req, res, next) => {
 				username: true,
 				birthdate: true,
 				contact: true,
+				imageUrl: true,
 			},
 		})
 
@@ -163,7 +166,7 @@ caregiversRoute.post("/:caregiverId", isAuth, async (req, res, next) => {
 	}
 })
 
-caregiversRoute.delete("/:caregiverId", isAuth, isAdmin, async (req, res, next) => {
+caregiversRoute.delete("/:caregiverId", isAdmin, async (req, res, next) => {
 	try {
 		const { caregiverId } = req.params as { caregiverId: string }
 
@@ -179,7 +182,7 @@ caregiversRoute.delete("/:caregiverId", isAuth, isAdmin, async (req, res, next) 
 	}
 })
 
-caregiversRoute.get("/:caregiverId/patients", isAuth, async (req, res, next) => {
+caregiversRoute.get("/:caregiverId/patients", async (req, res, next) => {
 	try {
 		const { caregiverId } = req.params as { caregiverId: string }
 		if (res.locals.id === caregiverId || res.locals.role === "ADMIN") {
@@ -187,6 +190,35 @@ caregiversRoute.get("/:caregiverId/patients", isAuth, async (req, res, next) => 
 			return res.status(200).json(patients)
 		}
 		throw unauthorizedError
+	} catch (e) {
+		next(e)
+	}
+})
+
+caregiversRoute.post("/:caregiverId/change-photo", async (req, res, next) => {
+	try {
+		const { image } = req.body as { image: string }
+		const { caregiverId } = req.params as { caregiverId: string }
+		const caregiver = await prisma.user.findUnique({ where: { id: caregiverId } })
+		if (!caregiver || caregiver.role !== "CAREGIVER") throw new HttpError(400, "Caregiver not found.")
+		if (res.locals.role === "CAREGIVER" && caregiverId !== res.locals.id) throw unauthorizedError
+		const imageUrl = await uploadImage(image, caregiverId, "caregiver")
+		const newCaregiver = await prisma.user.update({
+			where: { id: caregiverId },
+			data: {
+				imageUrl,
+			},
+			select: {
+				id: true,
+				name: true,
+				role: true,
+				username: true,
+				birthdate: true,
+				contact: true,
+				imageUrl: true,
+			},
+		})
+		return res.status(200).json(newCaregiver)
 	} catch (e) {
 		next(e)
 	}
