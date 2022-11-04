@@ -7,6 +7,7 @@ import activitiesRoutes from "./routes/activities"
 import caresRoute from "./routes/care"
 import isAdmin from "./middlewares/isAdmin"
 import isAuth from "./middlewares/isAuth"
+import recordsRoute from "./routes/records"
 
 const app = express()
 
@@ -17,6 +18,7 @@ app.use("/caregivers", isAuth, caregiversRoute)
 app.use("/patients", isAuth, patientsRoutes)
 app.use("/activities", isAuth, activitiesRoutes)
 app.use("/cares", isAuth, isAdmin, caresRoute)
+app.use("/records", isAuth , recordsRoute)
 
 const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
 	if (err instanceof HttpError) {
