@@ -224,4 +224,15 @@ caregiversRoute.post("/:caregiverId/change-photo", async (req, res, next) => {
 	}
 })
 
+caregiversRoute.get("/:caregiverId/cares", async (req, res, next) => {
+	try {
+		const { caregiverId } = req.params as { caregiverId: string }
+		if (res.locals.role === "CAREGIVER" && caregiverId !== res.locals.id) throw unauthorizedError
+		const cares = await prisma.care.findMany({ where: { caregiverId } })
+		return res.status(200).json(cares)
+	} catch (e) {
+		next(e)
+	}
+})
+
 export default caregiversRoute
