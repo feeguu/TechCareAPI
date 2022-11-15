@@ -87,7 +87,6 @@ activitiesRoutes.post("/patient/:patientId", async (req, res, next) => {
 					{ start: care.startTime, end: care.endTime }
 				)
 			})
-			console.table({activityDay: activityStart.day(), careDay: validCare?.weekday})
 			if (!validCare) throw new HttpError(400, "Activity time is outside the care period.")
 		}
 
