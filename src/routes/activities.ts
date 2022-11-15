@@ -128,7 +128,7 @@ activitiesRoutes.get("/caregiver/:caregiverId", async (req, res, next) => {
 		const caregiversActivities = activities.filter((activity) => {
 			const activityStart = dayjs(activity.startDatetime)
 			const activityEnd = dayjs(activity.endDatetime)
-			const validCare = activity.Patient.care.find((care) => {
+			const validCare = activity.Patient.care.some((care) => {
 				return isActivityOverlaidWithCareInterval(
 					{ start: activityStart, end: activityEnd },
 					{ start: care.startTime, end: care.endTime }

@@ -53,6 +53,7 @@ userRoutes.get("/auth", isAuth, async (req, res, next) => {
 				name: true,
 				birthdate: true,
 				contact: true,
+				imageUrl: true,
 			},
 		})
 

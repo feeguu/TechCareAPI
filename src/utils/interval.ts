@@ -54,10 +54,6 @@ export function isActivityOverlaidWithCareInterval(activity: Interval, care: { s
 	const careEnd = activity.end
 		.hour(dayjs(care.end, "HH:mm").hour())
 		.minute(dayjs(care.end, "HH:mm").minute())
-	console.table([
-		{ activityStart: activity.start.toDate(), activityEnd: activity.end.toDate() },
-		{ careStart: careStart.toDate(), careEnd: careEnd.toDate() },
-	])
 	return (
 		isIntervalOverlaid(activity, { start: careStart, end: careEnd }) 
 	)
