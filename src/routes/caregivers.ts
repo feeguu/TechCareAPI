@@ -7,7 +7,7 @@ import { HttpError } from "../errors/HttpError"
 import missingParamsError from "../errors/missingParamsError"
 import unauthorizedError from "../errors/unauthorizedError"
 import isAdmin from "../middlewares/isAdmin"
-import uploadImage from "../utils/uploadImage"
+import { uploadImage, deleteImage } from "../utils/image"
 
 const prisma = new PrismaClient()
 
@@ -175,6 +175,8 @@ caregiversRoute.delete("/:caregiverId", isAdmin, async (req, res, next) => {
 		if (!user || user.role !== "CAREGIVER") throw new HttpError(400, "Caregiver not found.")
 
 		const caregiver = await prisma.user.delete({ where: { id: caregiverId } })
+
+		await deleteImage(caregiver.id, "caregiver")
 
 		return res.status(204).json({})
 	} catch (e) {

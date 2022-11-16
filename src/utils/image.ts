@@ -1,6 +1,7 @@
 import cloudinary from "cloudinary"
 
-type uploadImage = (image: string, public_id: string, folder: string) => Promise<string>
+type UploadImageFunction = (image: string, public_id: string, folder: string) => Promise<string>
+type DeleteImageFunction = (public_id: string, folder: string) => Promise<string>
 
 cloudinary.v2.config({
 	cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -8,7 +9,7 @@ cloudinary.v2.config({
 	api_secret: process.env.CLOUDINARY_API_SECRET,
 })
 
-const uploadImage: uploadImage = async (image, public_id, folder) => {
+export const uploadImage: UploadImageFunction = async (image, public_id, folder) => {
 	const result = await cloudinary.v2.uploader.upload(image, {
 		public_id,
 		folder,
@@ -27,4 +28,7 @@ const uploadImage: uploadImage = async (image, public_id, folder) => {
 	return result.url
 }
 
-export default uploadImage
+export const deleteImage: DeleteImageFunction = async (public_id, folder) => {
+	const result = await cloudinary.v2.uploader.destroy(`${folder}/${public_id}`, { invalidate: true })
+	return result
+}

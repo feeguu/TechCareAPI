@@ -6,8 +6,7 @@ import { HttpError } from "../errors/HttpError"
 import missingParamsError from "../errors/missingParamsError"
 import unauthorizedError from "../errors/unauthorizedError"
 import isAdmin from "../middlewares/isAdmin"
-import isAuth from "../middlewares/isAuth"
-import uploadImage from "../utils/uploadImage"
+import {deleteImage, uploadImage} from "../utils/image"
 
 type PatientRequestBody = {
 	name: string
@@ -166,6 +165,8 @@ patientsRoutes.delete("/:patientId", isAdmin, async (req, res, next) => {
 		const patient = await prisma.patient.findUnique({ where: { id: patientId } })
 		if (!patient) throw new HttpError(400, "Patient not found.")
 
+		await deleteImage(patient.id, "patient")
+		
 		await prisma.patient.delete({ where: { id: patientId } })
 
 		return res.status(204).json({})

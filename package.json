@@ -4,6 +4,7 @@
   "description": "",
   "main": "src/index.ts",
   "scripts": {
+    "start": "ts-node src/index.ts",
     "dev": "ts-node-dev --ignore-watch node_modules --exit-child src/index.ts"
   },
   "keywords": [],
