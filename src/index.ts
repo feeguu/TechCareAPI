@@ -9,6 +9,8 @@ import isAdmin from "./middlewares/isAdmin"
 import isAuth from "./middlewares/isAuth"
 import recordsRoute from "./routes/records"
 
+const PORT = process.env.PORT || 3000
+
 const app = express()
 
 app.use(express.json({limit: "4mb"}))
@@ -29,6 +31,6 @@ const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
 
 app.use(errorHandler)
 
-app.listen(3000, () => {
-	console.log("Server running at port 3000")
+app.listen(PORT, () => {
+	console.log(`Server running at port ${PORT}`)
 })
