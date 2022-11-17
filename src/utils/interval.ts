@@ -14,10 +14,10 @@ dayjs.extend(customParseFormat)
 
 export function isIntervalValid({ start, end }: Interval): boolean {
 	return (
-		start.isValid() ||
-		end.isValid() ||
-		start.isSameOrAfter(dayjs()) ||
-		end.isSameOrAfter(start) ||
+		start.isValid() &&
+		end.isValid() &&
+		start.isSameOrAfter(dayjs()) &&
+		end.isSameOrAfter(start) &&
 		start.isSame(end, "day")
 	)
 }
@@ -54,7 +54,5 @@ export function isActivityOverlaidWithCareInterval(activity: Interval, care: { s
 	const careEnd = activity.end
 		.hour(dayjs(care.end, "HH:mm").hour())
 		.minute(dayjs(care.end, "HH:mm").minute())
-	return (
-		isIntervalOverlaid(activity, { start: careStart, end: careEnd }) 
-	)
+	return isIntervalOverlaid(activity, { start: careStart, end: careEnd })
 }
