@@ -41,7 +41,8 @@ caresRoute.post("/", async (req, res, next) => {
 	try {
 		const { patientId, caregiverId, startTime, endTime, weekday } = req.body as Care
 
-		if (!patientId || !caregiverId || !startTime || !endTime || weekday === undefined ) throw missingParamsError
+		if (!patientId || !caregiverId || !startTime || !endTime || weekday === undefined)
+			throw missingParamsError
 
 		if (
 			!startTime.match(/^(0[0-9]|1[0-9]|2[0-4]):[0-5][0-9]/g) ||
@@ -97,7 +98,8 @@ caresRoute.post("/:careId", async (req, res, next) => {
 		if (!care) throw new HttpError(400, "Care not found.")
 
 		const { patientId, caregiverId, startTime, endTime, weekday } = req.body as Care
-		if (!patientId || !caregiverId || !startTime || !endTime || weekday === undefined ) throw missingParamsError
+		if (!patientId || !caregiverId || !startTime || !endTime || weekday === undefined)
+			throw missingParamsError
 
 		const start = dayjs(startTime, "HH:mm")
 		const end = dayjs(endTime, "HH:mm")
@@ -115,6 +117,7 @@ caresRoute.post("/:careId", async (req, res, next) => {
 		const weekdayCares = await prisma.care.findMany({ where: { weekday } })
 		const hasConflictingCare = weekdayCares.some((care) => {
 			return (
+				care.id !== careId &&
 				(patientId === care.patientId || caregiverId === care.caregiverId) &&
 				isIntervalOverlaid(
 					{ start, end },
