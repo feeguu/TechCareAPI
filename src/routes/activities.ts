@@ -32,7 +32,7 @@ activitiesRoutes.get("/patient/:patientId", async (req, res, next) => {
 			where: { patientId },
 			include: { Patient: { include: { care: true } } },
 		})
-		if (res.locals.CAREGIVER) {
+		if (res.locals.role === "CAREGIVER") {
 			const filteredActivities = activitiesFromPatient.filter((activity) => {
 				const activityStart = dayjs(activity.startDatetime)
 				const activityEnd = dayjs(activity.endDatetime)
