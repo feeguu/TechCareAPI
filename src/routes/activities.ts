@@ -3,7 +3,6 @@ import dayjs from "dayjs"
 import express from "express"
 import { HttpError } from "../errors/HttpError"
 import missingParamsError from "../errors/missingParamsError"
-import isAuth from "../middlewares/isAuth"
 import customParseFormat from "dayjs/plugin/customParseFormat"
 import unauthorizedError from "../errors/unauthorizedError"
 import {
@@ -29,23 +28,28 @@ const activitiesRoutes = express.Router()
 activitiesRoutes.get("/patient/:patientId", async (req, res, next) => {
 	try {
 		const { patientId } = req.params as { patientId: string }
-		const activities = await prisma.activity.findMany({
+		const activitiesFromPatient = await prisma.activity.findMany({
 			where: { patientId },
 			include: { Patient: { include: { care: true } } },
 		})
-		if (res.locals.role === "ADMIN") {
-			return res.status(200).json(activities)
-		}
-		if (res.locals.role === "CAREGIVER") {
-			const filteredActivities = activities.filter((activity) => {
-				return activity.Patient.care.find((care) => {
-					return care.caregiverId === res.locals.id
+		if (res.locals.CAREGIVER) {
+			const filteredActivities = activitiesFromPatient.filter((activity) => {
+				const activityStart = dayjs(activity.startDatetime, "YYYY-MM-DD HH:mm")
+				const activityEnd = dayjs(activity.endDatetime, "YYYY-MM-DD HH:mm")
+				return activity.Patient.care.some((care) => {
+					return (
+						care.caregiverId === res.locals.id &&
+						dayjs(activity.startDatetime, "YYYY-MM-DD HH:mm").day() === care.weekday &&
+						isActivityOverlaidWithCareInterval(
+							{ start: activityStart, end: activityEnd },
+							{ start: care.startTime, end: care.endTime }
+						)
+					)
 				})
 			})
 			return res.status(200).json(filteredActivities)
 		}
-
-		throw new HttpError(400, "Patient not found.")
+		return res.status(200).json(activitiesFromPatient)
 	} catch (e) {
 		next(e)
 	}
@@ -128,9 +132,11 @@ activitiesRoutes.get("/caregiver/:caregiverId", async (req, res, next) => {
 			const activityStart = dayjs(activity.startDatetime)
 			const activityEnd = dayjs(activity.endDatetime)
 			const validCare = activity.Patient.care.some((care) => {
-				return isActivityOverlaidWithCareInterval(
-					{ start: activityStart, end: activityEnd },
-					{ start: care.startTime, end: care.endTime }
+				return (
+					isActivityOverlaidWithCareInterval(
+						{ start: activityStart, end: activityEnd },
+						{ start: care.startTime, end: care.endTime }
+					) || activityStart.day() === care.weekday
 				)
 			})
 			return validCare
