@@ -34,12 +34,12 @@ activitiesRoutes.get("/patient/:patientId", async (req, res, next) => {
 		})
 		if (res.locals.CAREGIVER) {
 			const filteredActivities = activitiesFromPatient.filter((activity) => {
-				const activityStart = dayjs(activity.startDatetime, "YYYY-MM-DD HH:mm")
-				const activityEnd = dayjs(activity.endDatetime, "YYYY-MM-DD HH:mm")
+				const activityStart = dayjs(activity.startDatetime)
+				const activityEnd = dayjs(activity.endDatetime)
 				return activity.Patient.care.some((care) => {
 					return (
 						care.caregiverId === res.locals.id &&
-						dayjs(activity.startDatetime, "YYYY-MM-DD HH:mm").day() === care.weekday &&
+						dayjs(activity.startDatetime).day() === care.weekday &&
 						isActivityOverlaidWithCareInterval(
 							{ start: activityStart, end: activityEnd },
 							{ start: care.startTime, end: care.endTime }
@@ -128,8 +128,8 @@ activitiesRoutes.get("/caregiver/:caregiverId", async (req, res, next) => {
 		})
 
 		const filteredActivities = activitiesFromRelatedPatients.filter((activity) => {
-			const activityStart = dayjs(activity.startDatetime, "YYYY-MM-DD HH:mm")
-			const activityEnd = dayjs(activity.endDatetime, "YYYY-MM-DD HH:mm")
+			const activityStart = dayjs(activity.startDatetime)
+			const activityEnd = dayjs(activity.endDatetime)
 			return activity.Patient.care.some((care) => {
 				return (
 					activityStart.day() === care.weekday &&
