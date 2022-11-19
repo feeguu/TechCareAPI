@@ -121,27 +121,25 @@ activitiesRoutes.post("/patient/:patientId", async (req, res, next) => {
 activitiesRoutes.get("/caregiver/:caregiverId", async (req, res, next) => {
 	try {
 		const { caregiverId } = req.params as { caregiverId: string }
-		if (res.locals.role === "CAREGIVER" && res.locals.id !== caregiverId) {
-			throw unauthorizedError
-		}
-		const activities = await prisma.activity.findMany({
+		if (res.locals.role === "CAREGIVER" && caregiverId !== res.locals.id) throw unauthorizedError
+		const activitiesFromRelatedPatients = await prisma.activity.findMany({
 			where: { Patient: { care: { some: { caregiverId } } } },
 			include: { Patient: { include: { care: true } } },
 		})
-		const caregiversActivities = activities.filter((activity) => {
-			const activityStart = dayjs(activity.startDatetime)
-			const activityEnd = dayjs(activity.endDatetime)
-			const validCare = activity.Patient.care.some((care) => {
+
+		const filteredActivities = activitiesFromRelatedPatients.filter((activity) => {
+			const activityStart = dayjs(activity.startDatetime, "YYYY-MM-DD HH:mm")
+			const activityEnd = dayjs(activity.endDatetime, "YYYY-MM-DD HH:mm")
+			return activity.Patient.care.some((care) => {
 				return (
+					activityStart.day() === care.weekday &&
 					isActivityOverlaidWithCareInterval(
 						{ start: activityStart, end: activityEnd },
 						{ start: care.startTime, end: care.endTime }
-					) || activityStart.day() === care.weekday
+					)
 				)
 			})
-			return validCare
 		})
-		res.status(200).json(caregiversActivities)
 	} catch (e) {
 		next(e)
 	}
