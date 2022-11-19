@@ -174,9 +174,10 @@ caregiversRoute.delete("/:caregiverId", isAdmin, async (req, res, next) => {
 
 		if (!user || user.role !== "CAREGIVER") throw new HttpError(400, "Caregiver not found.")
 
-		const caregiver = await prisma.user.delete({ where: { id: caregiverId } })
+		await prisma.care.deleteMany({ where: { caregiverId } })
+		await prisma.user.delete({ where: { id: caregiverId } })
 
-		await deleteImage(caregiver.id, "caregiver")
+		await deleteImage(caregiverId, "caregiver")
 
 		return res.status(204).json({})
 	} catch (e) {
